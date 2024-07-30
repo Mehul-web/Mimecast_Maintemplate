@@ -1,0 +1,40 @@
+{
+    "Name": "Mimecast",
+    "Author": "Mimecast - dlapi@mimecast.com",
+    "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/Mimecast.svg\" width=\"75px\" height=\"75px\">",
+    "Description": "Mimecast solution for Microsoft Sentinel enables you to ingest Mimecast alerts and events into Microsoft Sentinel. The connector provides visibility into Mimecast Platform Events and Alerts in Microsoft Sentinel to improve monitoring and investigation capabilities.",
+    "Analytic Rules": [
+        "Analytic Rules/Mimecast_TTP_Attachment.yaml",
+        "Analytic Rules/Mimecast_TTP_Impersonation.yaml",
+        "Analytic Rules/Mimecast_TTP_Url.yaml",
+        "Analytic Rules/Mimecast_Audit.yaml",
+        "Analytic Rules/MimecastCG_Attachment.yaml",
+        "Analytic Rules/MimecastCG_AV.yaml",
+        "Analytic Rules/MimecastCG_Impersonation.yaml",
+        "Analytic Rules/MimecastCG_Internal_Mail_Protect.yaml",
+        "Analytic Rules/MimecastCG_Spam_Event.yaml",
+        "Analytic Rules/MimecastCG_Url_Protect.yaml",
+        "Analytic Rules/MimecastCG_Virus.yaml",
+        "Analytic Rules/MimecastDLP_Hold.yaml",
+        "Analytic Rules/MimecastDLP_Notifications.yaml"
+    ],
+    "Workbooks": [
+        "Workbooks/Mimecast_Audit_Workbook.json",
+        "Workbooks/Mimecast_Awareness_Training_Workbook.json",
+        "Workbooks/Mimecast_Cloud_Integrated_Workbook.json",
+        "Workbooks/Mimecast_SEG_Worbook.json",
+        "Workbooks/Mimecast_TTP_Workbook.json"
+    ],
+    "Data Connectors": [
+        "Data Connectors/Mimecast_AT_FunctionApp.json",
+        "Data Connectors/Mimecast_Audit_FunctionApp.json",
+        "Data Connectors/Mimecast_Cloud_Integrated_FunctionApp.json",
+        "Data Connectors/Mimecast_SEG_FunctionApp.json",
+        "Data Connectors/Mimecast_TTP_FunctionApp.json"
+    ],
+    "BasePath": "C:\\Azure-Sentinel\\Solutions\\MimecastAudit",
+    "Version": "3.0.2",
+    "Metadata": "SolutionMetadata.json",
+    "TemplateSpec": true,
+    "Is1PConnector": false
+}
