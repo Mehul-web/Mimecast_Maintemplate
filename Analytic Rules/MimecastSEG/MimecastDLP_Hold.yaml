@@ -3,7 +3,7 @@ name: Mimecast Data Leak Prevention - Hold
 description: Detects threat for data leak when action is hold
 severity: Informational
 requiredDataConnectors:
-  - connectorId: MimecastSEG
+  - connectorId: MimecastSEGAPI
     dataTypes:
       - MimecastDLP
 enabled: true

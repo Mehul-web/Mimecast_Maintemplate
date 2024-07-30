@@ -3,7 +3,7 @@ name: Mimecast Data Leak Prevention - Notifications
 description: Detects threat for data leak when action is notification
 severity: High
 requiredDataConnectors:
-  - connectorId: MimecastSEG
+  - connectorId: MimecastSEGAPI
     dataTypes:
       - MimecastDLP
 enabled: true

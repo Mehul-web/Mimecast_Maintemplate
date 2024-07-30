@@ -5,7 +5,7 @@ description: |
 severity: Low
 status: Available
 requiredDataConnectors:
-  - connectorId: MimecastSEG
+  - connectorId: MimecastSEGAPI
     dataTypes:
       - MimecastCG
 enabled: true
@@ -20,6 +20,7 @@ relevantTechniques:
 query: |
   MimecastCG
   | where Type == "email_spam"
+suppressionDuration: 5h
 suppressionEnabled: false
 incidentConfiguration:
   createIncident: true

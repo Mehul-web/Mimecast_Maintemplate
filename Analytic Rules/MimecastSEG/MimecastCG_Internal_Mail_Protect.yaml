@@ -5,7 +5,7 @@ description: |
 severity: High
 status: Available
 requiredDataConnectors:
-  - connectorId: MimecastSEG
+  - connectorId: MimecastSEGAPI
     dataTypes:
       - MimecastCG
 enabled: true
@@ -23,6 +23,7 @@ relevantTechniques:
 query: |
   MimecastCG
   | where Type == "email_iep"
+suppressionDuration: 5h
 suppressionEnabled: false
 incidentConfiguration:
   createIncident: true

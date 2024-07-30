@@ -4,25 +4,13 @@
     "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/Mimecast.svg\" width=\"75px\" height=\"75px\">",
     "Description": "Mimecast solution for Microsoft Sentinel enables you to ingest Mimecast alerts and events into Microsoft Sentinel. The connector provides visibility into Mimecast Platform Events and Alerts in Microsoft Sentinel to improve monitoring and investigation capabilities.",
     "Analytic Rules": [
-        "Analytic Rules/MimecastTTP/Mimecast_TTP_Attachment.yaml",
-        "Analytic Rules/MimecastTTP/Mimecast_TTP_Impersonation.yaml",
-        "Analytic Rules/MimecastTTP/Mimecast_TTP_Url.yaml",
-        "Analytic Rules/MimecastAudit/Mimecast_Audit.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Attachment.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_AV.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Impersonation.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Internal_Mail_Protect.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Spam_Event.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Url_Protect.yaml",
-        "Analytic Rules/MimecastSEG/MimecastCG_Virus.yaml",
-        "Analytic Rules/MimecastSEG/MimecastDLP_Hold.yaml",
-        "Analytic Rules/MimecastSEG/MimecastDLP_Notifications.yaml"
+        "Analytic Rules/Mimecast_TTP_Attachment.yaml"
     ],
     "Workbooks": [
         "Workbooks/Mimecast_Audit_Workbook.json",
-        "Workbooks/Mimecast_Awareness_Training_Workbook.json",
+        "Workbooks/Mimecast_Awareness_Training_Worbook.json",
         "Workbooks/Mimecast_Cloud_Integrated_Workbook.json",
-        "Workbooks/Mimecast_SEG_Worbook.json",
+        "Workbooks/Mimecast_SEG_Workbook.json",
         "Workbooks/Mimecast_TTP_Workbook.json"
     ],
     "Parsers": [
@@ -39,13 +27,13 @@
         "Parsers/MimecastTTP/Mimecast_TTP_Url.yaml"
     ],
     "Data Connectors": [
-        "Data Connectors/MimecasAT/Mimecast_AT_FunctionApp.json",
+        "Data Connectors/MimecastAT/Mimecast_AT_FunctionApp.json",
         "Data Connectors/MimecastAudit/Mimecast_Audit_FunctionApp.json",
         "Data Connectors/MimecastCloudIntegrated/Mimecast_Cloud_Integrated_FunctionApp.json",
         "Data Connectors/MimecastSEG/Mimecast_SEG_FunctionApp.json",
         "Data Connectors/MimecastTTP/Mimecast_TTP_FunctionApp.json"
     ],
-    "BasePath": "C:\\Azure-Sentinel\\Solutions\\Mimecast",
+    "BasePath": "C:\\Users\\mehul.bhuva\\Desktop\\Azure\\Azure-Sentinel\\Solutions\\Mimecast\\",
     "Version": "3.0.0",
     "Metadata": "SolutionMetadata.json",
     "TemplateSpec": true,

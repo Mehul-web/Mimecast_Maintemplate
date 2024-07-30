@@ -5,7 +5,7 @@ description: |
 severity: High
 status: Available
 requiredDataConnectors:
-  - connectorId: MimecastTtp
+  - connectorId: MimecastTTPAPI
     dataTypes:
       - MimecastTTPUrl
 queryFrequency: 5m
@@ -20,6 +20,7 @@ relevantTechniques:
 query: |
   MimecastTTPUrl
   | where ScanResult == "malicious" and Action != "allow"
+suppressionDuration: 5h
 suppressionEnabled: false
 incidentConfiguration:
   createIncident: true

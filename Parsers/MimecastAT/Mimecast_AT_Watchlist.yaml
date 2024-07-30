@@ -7,14 +7,14 @@ Category: Microsoft Sentinel Parser
 FunctionName: AwarenessWatchlist
 FunctionAlias: AwarenessWatchlist
 FunctionQuery: |
-    let Awareness_Watchlist_view = view() {
-    Awareness_Watchlist_Details_CL
-    | extend Email = column_ifexists('email_s', ''),
-      Name = column_ifexists('name_s', ''),
-      WatchlistCount = column_ifexists('watchlistCount_d', 0),
-      UserState = column_ifexists('userState_s', ''),
-      TimeGenerated = column_ifexists('TimeGenerated', '')
-    | project TimeGenerated, Email, Name, WatchlistCount, UserState
-};
-Awareness_Watchlist_view
+  let Awareness_Watchlist_view = view() {
+  Awareness_Watchlist_Details_CL
+  | extend Email = column_ifexists('email_s', ''),
+    Name = column_ifexists('name_s', ''),
+    WatchlistCount = column_ifexists('watchlistCount_d', 0),
+    UserState = column_ifexists('userState_s', ''),
+    TimeGenerated = column_ifexists('TimeGenerated', '')
+  | project TimeGenerated, Email, Name, WatchlistCount, UserState
+  };
+  Awareness_Watchlist_view
 

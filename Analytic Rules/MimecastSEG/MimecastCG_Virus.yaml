@@ -5,7 +5,7 @@ description: |
 severity: Informational
 status: Available
 requiredDataConnectors:
-  - connectorId: MimecastSEG
+  - connectorId: MimecastSEGAPI
     dataTypes:
       - MimecastCG
 enabled: true
@@ -20,6 +20,7 @@ relevantTechniques:
 query: |
   MimecastCG
   | where Type == "email_receipt" and isnotempty(VirusFound)
+suppressionDuration: 5h
 suppressionEnabled: false
 incidentConfiguration:
   createIncident: true
