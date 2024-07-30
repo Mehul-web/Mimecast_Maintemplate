@@ -204,7 +204,7 @@
                         "MimecastClientSecret": "[trim(parameters('MimecastClientSecret'))]",
                         "Schedule": "[trim(parameters('Schedule'))]",
                         "LogLevel": "[trim(parameters('LogLevel'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-MimecastAT-functionapp"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastAT/MimecastAT.zip"
                     }
                 }
             ]

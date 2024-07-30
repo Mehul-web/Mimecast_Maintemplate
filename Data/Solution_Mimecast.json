@@ -25,6 +25,19 @@
         "Workbooks/Mimecast_SEG_Worbook.json",
         "Workbooks/Mimecast_TTP_Workbook.json"
     ],
+    "Parsers": [
+        "Parsers/Mimecast_AT_Performane_Detail.yaml",
+        "Parsers/Mimecast_AT_Safe_Score.yaml",
+        "Parsers/Mimecast_AT_User_Data.yaml",
+        "Parsers/Mimecast_AT_Watchlist.yaml",
+        "Parsers/Mimecast_Audit.yaml",
+        "Parsers/Mimecast_Cloud_Integrated.yaml",
+        "Parsers/Mimecast_SEG_CG.yaml",
+        "Parsers/Mimecast_SEG_DLP.yaml",
+        "Parsers/Mimecast_TTP_Attachment.yaml",
+        "Parsers/Mimecast_TTP_Impersonation.yaml",
+        "Parsers/Mimecast_TTP_Url.yaml"
+    ],
     "Data Connectors": [
         "Data Connectors/Mimecast_AT_FunctionApp.json",
         "Data Connectors/Mimecast_Audit_FunctionApp.json",
@@ -32,8 +45,8 @@
         "Data Connectors/Mimecast_SEG_FunctionApp.json",
         "Data Connectors/Mimecast_TTP_FunctionApp.json"
     ],
-    "BasePath": "C:\\Azure-Sentinel\\Solutions\\MimecastAudit",
-    "Version": "3.0.2",
+    "BasePath": "C:\\Azure-Sentinel\\Solutions\\Mimecast",
+    "Version": "3.0.0",
     "Metadata": "SolutionMetadata.json",
     "TemplateSpec": true,
     "Is1PConnector": false
