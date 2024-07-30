@@ -4,7 +4,19 @@
     "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/Mimecast.svg\" width=\"75px\" height=\"75px\">",
     "Description": "Mimecast solution for Microsoft Sentinel enables you to ingest Mimecast alerts and events into Microsoft Sentinel. The connector provides visibility into Mimecast Platform Events and Alerts in Microsoft Sentinel to improve monitoring and investigation capabilities.",
     "Analytic Rules": [
-        "Analytic Rules/Mimecast_TTP_Attachment.yaml"
+        "Analytic Rules/MimecastTTP/Mimecast_TTP_Attachment.yaml",
+        "Analytic Rules/MimecastTTP/Mimecast_TTP_Impersonation.yaml",
+        "Analytic Rules/MimecastTTP/Mimecast_TTP_Url.yaml",
+        "Analytic Rules/MimecastAudit/Mimecast_Audit.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Attachment.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_AV.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Impersonation.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Internal_Mail_Protect.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Spam_Event.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Url_Protect.yaml",
+        "Analytic Rules/MimecastSEG/MimecastCG_Virus.yaml",
+        "Analytic Rules/MimecastSEG/MimecastDLP_Hold.yaml",
+        "Analytic Rules/MimecastSEG/MimecastDLP_Notifications.yaml"
     ],
     "Workbooks": [
         "Workbooks/Mimecast_Audit_Workbook.json",
