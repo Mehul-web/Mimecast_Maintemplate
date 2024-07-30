@@ -30,7 +30,7 @@ incidentConfiguration:
   groupingConfiguration:
     enabled: true
     reopenClosedIncident: false
-    lookbackDuration: 1d
+    lookbackDuration: P7D
     matchingMethod: AllEntities
 eventGroupingSettings:
   aggregationKind: AlertPerResult
