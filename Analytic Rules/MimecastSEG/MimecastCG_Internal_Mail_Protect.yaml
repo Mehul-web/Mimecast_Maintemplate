@@ -42,6 +42,6 @@ entityMappings:
   - identifier: Recipient
     columnName: Recipients
   - identifier: InternetMessageId
-    columnName: MessageID
+    columnName: MessageId
 version: 1.0.0
 kind: Scheduled
