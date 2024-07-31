@@ -180,7 +180,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type ==\"email_delivery\"\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
+              "query": "MimecastCG\r\n| where Type ==\"email_delivery\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
               "size": 0,
               "showAnalytics": true,
               "title": "Email Traffic",
@@ -200,7 +200,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let min_t = toscalar(\r\n    MimecastCG \r\n    | where Type == \"email_receipt\" and isnotempty(RejectionType)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG \r\n| where Type == \"email_receipt\" and isnotempty(RejectionType) \r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n| make-series Trend = count() default = 0 on DateTime from min_t to now() step 1d by tostring(RejectionType) \r\n| project-away DateTime \r\n| extend Count = array_sum(Trend) \r\n| project ['Rejection Type'] = RejectionType, Count, ['Spark Line'] = Trend \r\n| order by Count desc",
+              "query": "let min_t = toscalar(\r\n    MimecastCG \r\n    | where Type == \"email_receipt\" and isnotempty(RejectionType)\r\n    | extend Timestamp = coalesce(toint(Timestamp), 1)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG \r\n| where Type == \"email_receipt\" and isnotempty(RejectionType) \r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n| make-series Trend = count() default = 0 on DateTime from min_t to now() step 1d by tostring(RejectionType) \r\n| project-away DateTime \r\n| extend Count = array_sum(Trend) \r\n| project ['Rejection Type'] = RejectionType, Count, ['Spark Line'] = Trend \r\n| order by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Rejections",
@@ -240,7 +240,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "\r\nlet min_t = toscalar(\r\n    MimecastCG \r\n    | where Type == \"email_delivery\" and isnotempty(RejectionType)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG \r\n| where Type == \"email_delivery\" and isnotempty(RejectionType)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n| make-series Trend = count() default = 0 on DateTime from min_t to now() step 1d by tostring(RejectionType) \r\n| project-away DateTime \r\n| extend Count = array_sum(Trend) \r\n| project ['Rejection Type'] = RejectionType, Count, ['Spark Line'] = Trend \r\n| order by Count desc",
+              "query": "\r\nlet min_t = toscalar(\r\n    MimecastCG \r\n    | where Type == \"email_delivery\" and isnotempty(RejectionType)\r\n    | extend Timestamp = coalesce(toint(Timestamp), 1)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG \r\n| where Type == \"email_delivery\" and isnotempty(RejectionType)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp)) \r\n| make-series Trend = count() default = 0 on DateTime from min_t to now() step 1d by tostring(RejectionType) \r\n| project-away DateTime \r\n| extend Count = array_sum(Trend) \r\n| project ['Rejection Type'] = RejectionType, Count, ['Spark Line'] = Trend \r\n| order by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Delivery Failures",
@@ -280,7 +280,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let min_t = toscalar(\r\n    MimecastCG\r\n    | where Type == \"email_process\" and isnotempty(HoldReason)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG\r\n| where Type == \"email_process\" and isnotempty(HoldReason)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Trend = count() default = 0 on TimeGenerated from min_t to now() step 1d by tostring(HoldReason)\r\n| project-away TimeGenerated\r\n| extend Count=array_sum(Trend)\r\n| project ['Hold Reason']=HoldReason, Count,['Spark Line'] = Trend\r\n| order by Count desc",
+              "query": "let min_t = toscalar(\r\n    MimecastCG\r\n    | where Type == \"email_process\" and isnotempty(HoldReason)\r\n    | extend Timestamp = coalesce(toint(Timestamp), 1)\r\n    | extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n    | summarize min_time = min(DateTime)\r\n    | extend min_t = iff(isempty(min_time),now(),min_time)\r\n    | project min_t);\r\nMimecastCG\r\n| where Type == \"email_process\" and isnotempty(HoldReason)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Trend = count() default = 0 on TimeGenerated from min_t to now() step 1d by tostring(HoldReason)\r\n| project-away TimeGenerated\r\n| extend Count=array_sum(Trend)\r\n| project ['Hold Reason']=HoldReason, Count,['Spark Line'] = Trend\r\n| order by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Held",
@@ -722,7 +722,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type== \"email_receipt\" and Action in~ (\"Acc\", \"RTY\")\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
+              "query": "MimecastCG\r\n| where Type== \"email_receipt\" and Action in~ (\"Acc\", \"RTY\")\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
               "size": 0,
               "showAnalytics": true,
               "title": "Messages Accepted by Route",
@@ -1215,7 +1215,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered ==  \"true\"  \r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
+              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered ==  \"true\" \r\n| extend Timestamp = coalesce(toint(Timestamp), 1) \r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
               "size": 0,
               "showAnalytics": true,
               "title": "Messages Delivered by Route",
@@ -1387,7 +1387,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type ==\"email_antivirus\"\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
+              "query": "MimecastCG\r\n| where Type ==\"email_antivirus\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
               "size": 0,
               "showAnalytics": true,
               "title": "Anti-Virus Traffic",
@@ -1653,7 +1653,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(VirusFound)\r\n| summarize Count = count() by SenderEnvelope , Recipients , SenderIp,VirusFound , Timestamp\r\n| sort by Count desc\r\n| extend Sender = SenderEnvelope , Recipient =  Recipients , [\"Source IP\"] = SenderIp, [\"Virus Name\"] = VirusFound\r\n| project Sender, Recipient, [\"Source IP\"], [\"Virus Name\"], Count ,Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| extend Count = iff(isnull(Count), 0, Count)\r\n",
+              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(VirusFound)\r\n| summarize Count = count() by SenderEnvelope , Recipients , SenderIp,VirusFound , Timestamp\r\n| sort by Count desc\r\n| extend Sender = SenderEnvelope , Recipient =  Recipients , [\"Source IP\"] = SenderIp, [\"Virus Name\"] = VirusFound, Timestamp = coalesce(toint(Timestamp), 1)\r\n| project Sender, Recipient, [\"Source IP\"], [\"Virus Name\"], Count ,Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| extend Count = iff(isnull(Count), 0, Count)\r\n",
               "size": 0,
               "showAnalytics": true,
               "title": "Messages Rejected Due to Virus",
@@ -1692,7 +1692,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(SpamInfo) and SpamInfo != \"[]\"\r\n| summarize Count = count() by SenderEnvelope , Recipients , SenderIp,SpamInfo , Timestamp\r\n| sort by Count desc\r\n| extend Sender = SenderEnvelope , Recipient =  Recipients , [\"Source IP\"] = SenderIp, [\"Spam Information\"]  = SpamInfo\r\n| project Sender, Recipient, [\"Source IP\"], [\"Spam Information\"], Count , Timestamp =  todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| extend Count = iff(isnull(Count), 0, Count)\r\n",
+              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(SpamInfo) and SpamInfo != \"[]\"\r\n| summarize Count = count() by SenderEnvelope , Recipients , SenderIp,SpamInfo , Timestamp\r\n| sort by Count desc\r\n| extend Sender = SenderEnvelope , Recipient =  Recipients , [\"Source IP\"] = SenderIp, [\"Spam Information\"]  = SpamInfo, Timestamp = coalesce(toint(Timestamp), 1)\r\n| project Sender, Recipient, [\"Source IP\"], [\"Spam Information\"], Count , Timestamp =  todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| extend Count = iff(isnull(Count), 0, Count)\r\n",
               "size": 0,
               "showAnalytics": true,
               "title": "Messages Rejected as Spam",
@@ -1821,7 +1821,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered == \"true\" and isnotnull(TlsUsed)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by TlsUsed",
+              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered == \"true\" and isnotnull(TlsUsed)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by TlsUsed",
               "size": 0,
               "showAnalytics": true,
               "title": "TLS Delivery",
@@ -1841,7 +1841,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered== \"true\" and isnotempty(TlsVersion)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| summarize Count = count(Recipients) by bin(DateTime , 1d), TlsVersion",
+              "query": "MimecastCG\r\n| where Type == \"email_delivery\" and Delivered== \"true\" and isnotempty(TlsVersion)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| summarize Count = count(Recipients) by bin(DateTime , 1d), TlsVersion",
               "size": 0,
               "showAnalytics": true,
               "title": "TLS Versions (Delivery)",
@@ -1867,7 +1867,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(TlsVersion)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| summarize Count = count(Recipients) by bin(DateTime , 1d), TlsVersion",
+              "query": "MimecastCG\r\n| where Type == \"email_receipt\" and isnotempty(TlsVersion)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| summarize Count = count(Recipients) by bin(DateTime , 1d), TlsVersion",
               "size": 0,
               "showAnalytics": true,
               "title": "TLS Versions (Receipt)",
@@ -2097,7 +2097,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastDLP\n| summarize count() by Action, bin(EventTime, 1d)\n",
+              "query": "MimecastDLP\n| extend EventTime = coalesce(todatetime(EventTime), now() - 15d)\n| summarize count() by Action, bin(EventTime, 1d)\n",
               "size": 0,
               "showAnalytics": true,
               "title": "Data Leak Prevention Events",
@@ -2190,7 +2190,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastDLP\n| summarize count() by Action, bin(EventTime, 1h)\n",
+              "query": "MimecastDLP\n| extend EventTime = coalesce(todatetime(EventTime), now() - 15d)\n| summarize count() by Action, bin(EventTime, 1h)\n",
               "size": 3,
               "showAnalytics": true,
               "title": "DLP Events by Actions Triggered",
@@ -2334,7 +2334,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_iep\"\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
+              "query": "MimecastCG\r\n| where Type == \"email_iep\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
               "size": 0,
               "showAnalytics": true,
               "title": "Internal Email Protection by Route",
@@ -2354,7 +2354,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_iep\"\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Subject,\r\n    Recipients,\r\n    ['Url Category'] = UrlCategory,\r\n    ['Scan Results'] = ScanResults,\r\n    Route,\r\n    ['Message ID'] = MessageId,\r\n    ['Monitored Domain Source'] = MonitoredDomainSource,\r\n    ['Similar Domain'] =SimilarDomain,\r\n    ['Sub Type'] = Subtype",
+              "query": "MimecastCG\r\n| where Type == \"email_iep\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Subject,\r\n    Recipients,\r\n    ['Url Category'] = UrlCategory,\r\n    ['Scan Results'] = ScanResults,\r\n    Route,\r\n    ['Message ID'] = MessageId,\r\n    ['Monitored Domain Source'] = MonitoredDomainSource,\r\n    ['Similar Domain'] =SimilarDomain,\r\n    ['Sub Type'] = Subtype",
               "size": 0,
               "showAnalytics": true,
               "title": "Internal Event Protection Events",
@@ -2468,7 +2468,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_journal\"\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
+              "query": "MimecastCG\r\n| where Type == \"email_journal\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Direction",
               "size": 0,
               "showAnalytics": true,
               "title": "Journal Messages by Direction",
@@ -2488,7 +2488,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_journal\"\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Recipients,\r\n    Direction,\r\n    ['Sub Type'] = Subtype",
+              "query": "MimecastCG\r\n| where Type == \"email_journal\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Recipients,\r\n    Direction,\r\n    ['Sub Type'] = Subtype",
               "size": 0,
               "showAnalytics": true,
               "title": "Journal Message Events",
@@ -2602,7 +2602,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type ==\"email_spam\" and isnotempty(Route)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
+              "query": "MimecastCG\r\n| where Type ==\"email_spam\" and isnotempty(Route)\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend DateTime = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| make-series Count=count() default=0 on DateTime step 1d by Route",
               "size": 0,
               "showAnalytics": true,
               "title": "Spam Messages by Route",
@@ -2622,7 +2622,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastCG\r\n| where Type == \"email_spam\"\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Subject,\r\n    Recipients,\r\n    ['Sender IP'] = SenderIp,\r\n    ['Sender Domain'] = SenderDomain,\r\n    ['Sender Header'] = SenderHeader,\r\n    Route,\r\n    ['Sub Type'] = Subtype",
+              "query": "MimecastCG\r\n| where Type == \"email_spam\"\r\n| extend Timestamp = coalesce(toint(Timestamp), 1)\r\n| extend Timestamp = todatetime(unixtime_milliseconds_todatetime(Timestamp))\r\n| project\r\n    ['Aggregate ID'] = AggregateId,\r\n    ['Processing ID'] = ProcessingId,\r\n    ['Account ID'] = AccountId,\r\n    Type,\r\n    Timestamp,\r\n    ['Sender Envelope'] = SenderEnvelope,\r\n    Subject,\r\n    Recipients,\r\n    ['Sender IP'] = SenderIp,\r\n    ['Sender Domain'] = SenderDomain,\r\n    ['Sender Header'] = SenderHeader,\r\n    Route,\r\n    ['Sub Type'] = Subtype",
               "size": 0,
               "showAnalytics": true,
               "title": "Spam Message Events",
@@ -2698,6 +2698,6 @@
       "name": "text - 7"
     }
   ],
-  "fromTemplateId": "Mimecast-sentinel-SEG",
+  "fromTemplateId": "sentinel-UserWorkbook",
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
 }

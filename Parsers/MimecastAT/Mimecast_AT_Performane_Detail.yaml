@@ -7,8 +7,10 @@ Category: Microsoft Sentinel Parser
 FunctionName: AwarenessPerformanceDetails
 FunctionAlias: AwarenessPerformanceDetails
 FunctionQuery: |
+  let dummy_table = datatable(TimeGenerated: datetime) [];
   let Awareness_Performance_Details_view = view() {
-  Awareness_Performance_Details1_CL
+  union isfuzzy=true dummy_table,
+  Awareness_Performance_Details_CL
   | extend Email = column_ifexists('email_s', ''),
       Name = column_ifexists('name_s', ''),
       NumCorrect = column_ifexists('numCorrect_d', ''),

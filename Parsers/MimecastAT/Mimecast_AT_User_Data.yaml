@@ -7,7 +7,9 @@ Category: Microsoft Sentinel Parser
 FunctionName: AwarenessUserData
 FunctionAlias: AwarenessUserData
 FunctionQuery: |
+  let dummy_table = datatable(TimeGenerated: datetime) [];
   let Awareness_User_Data_view = view() {
+  union isfuzzy=true dummy_table,
   Awareness_User_Data_CL
   | extend TimeGenerated = column_ifexists('TimeGenerated', ''),
   TimeReported = column_ifexists('timeReported_t', ''),

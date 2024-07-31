@@ -7,7 +7,7 @@ Category: Microsoft Sentinel Parser
 FunctionName: MimecastDLP
 FunctionAlias: MimecastDLP
 FunctionQuery: |
-  let dummy_table = datatable() [];
+  let dummy_table = datatable(TimeGenerated: datetime) [];
   let MimecastSEG_view = view() {
   union isfuzzy=true dummy_table,
   Seg_Dlp_CL
@@ -20,6 +20,7 @@ FunctionQuery: |
       Action = column_ifexists('action_s',''),
       MessageId = column_ifexists('messageId_s',''),
       TimeGenerated = column_ifexists('TimeGenerated','')
+  | summarize arg_max(TimeGenerated,*) by SenderAddress ,RecipientAddress , Subject, Route , Policy , Action , EventTime , MessageId
   | project TimeGenerated ,SenderAddress ,RecipientAddress , Subject, Route , Policy , Action , EventTime , MessageId
   };
   MimecastSEG_view

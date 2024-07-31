@@ -7,7 +7,7 @@ Category: Microsoft Sentinel Parser
 FunctionName: MimecastCloudIntegrated
 FunctionAlias: MimecastCloudIntegrated
 FunctionQuery: |
-  let dummy_table = datatable() [];
+  let dummy_table = datatable(TimeGenerated: datetime) [];
   let MimecastCloudIntegrated = view() {
   union isfuzzy=true dummy_table,
   Cloud_Integrated_CL
@@ -42,6 +42,26 @@ FunctionQuery: |
       Subtype  = column_ifexists('subtype_s', ''),
       Offset  = column_ifexists('_offset_d', ''),
       Partition  = column_ifexists('_partition_d', '')
+  |  summarize arg_max(TimeGenerated, *) by Timestamp,
+        ['Account ID'],
+        ['Aggregate ID'],
+        ['Processing ID'],
+        ['Message ID'],
+        Attachments,
+        Recipients,
+        Tags,
+        ['Policies Applied'],
+        ['Historical Mail'],
+        ['Sender IP'],
+        ['Sender Envelope'],
+        Subject,
+        Source,
+        ['Threat State'],
+        ['Threat Type'],
+        Direction,
+        ['Sender Header'],
+        Type,
+        Subtype
   | project TimeGenerated,
         Timestamp,
         ['Account ID'],

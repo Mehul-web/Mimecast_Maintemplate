@@ -7,7 +7,7 @@ Category: Microsoft Sentinel Parser
 FunctionName: MimecastAudit
 FunctionAlias: MimecastAudit
 FunctionQuery: |
-    let dummy_table = datatable() [];
+    let dummy_table = datatable(TimeGenerated: datetime) [];
     let MimecastAudit_view = view() {
     union isfuzzy=true dummy_table,
     MimecastAudit_CL

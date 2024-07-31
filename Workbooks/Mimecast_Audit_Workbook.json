@@ -78,7 +78,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "MimecastAudit\n| summarize count() by Category, bin(EventTime, 1d)",
+        "query": "MimecastAudit\n| extend EventTime = coalesce(todatetime(EventTime), now() - 15d)\n| summarize count() by Category, bin(EventTime, 1d)",
         "size": 0,
         "showAnalytics": true,
         "title": "Audit & Authentication Events by Category",
@@ -214,7 +214,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -243,7 +242,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -272,7 +270,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -301,7 +298,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -330,7 +326,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -359,7 +354,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -388,7 +382,6 @@
               "queryType": 0,
               "resourceType": "microsoft.operationalinsights/workspaces",
               "visualization": "piechart",
-              "sortBy": [],
               "chartSettings": {
                 "group": "AuditType",
                 "createOtherGroup": 10,
@@ -516,7 +509,6 @@
                         "thresholdsGrid": [
                           {
                             "operator": "Default",
-                            "thresholdValue": null,
                             "representation": "blue"
                           }
                         ]

@@ -7,7 +7,9 @@ Category: Microsoft Sentinel Parser
 FunctionName: AwarenessWatchlist
 FunctionAlias: AwarenessWatchlist
 FunctionQuery: |
+  let dummy_table = datatable(TimeGenerated: datetime) [];
   let Awareness_Watchlist_view = view() {
+  union isfuzzy=true dummy_table,
   Awareness_Watchlist_Details_CL
   | extend Email = column_ifexists('email_s', ''),
     Name = column_ifexists('name_s', ''),

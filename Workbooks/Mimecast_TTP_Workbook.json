@@ -85,7 +85,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "let TableMapping = dynamic(\n  {\n    \"Ttp_Url_CL\" : \"URL Protect\",\n    \"Ttp_Attachment_CL\" : \"Attachment Protect\",\n    \"Ttp_Impersonation_CL\" : \"Impersonation Protect\"\n  });\nunion MimecastTTPUrl, MimecastTTPAttachment, MimecastTTPImpersonation\n| extend Type = tostring(TableMapping[Type])\n| make-series Count=count() default=0 on Date step 1d by Type",
+        "query": "let TableMapping = dynamic(\n  {\n    \"Ttp_Url_CL\" : \"URL Protect\",\n    \"Ttp_Attachment_CL\" : \"Attachment Protect\",\n    \"Ttp_Impersonation_CL\" : \"Impersonation Protect\"\n  });\nunion MimecastTTPUrl, MimecastTTPAttachment, MimecastTTPImpersonation\n| extend Type = tostring(TableMapping[Type]), Date = coalesce(todatetime(Date), now() - 14d)\n| make-series Count=count() default=0 on Date step 1d by Type",
         "size": 3,
         "showAnalytics": true,
         "title": "Detection counts for Attachment Protect, URL Protect and Impersonation Protect",
@@ -138,9 +138,7 @@
           "targetIdField": "Type",
           "graphOrientation": 3,
           "showOrientationToggles": false,
-          "nodeSize": null,
           "staticNodeSize": 100,
-          "colorSettings": null,
           "hivesMargin": 5
         },
         "chartSettings": {
@@ -220,7 +218,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastTTPUrl\n| where ScanResult == \"malicious\"\n| make-series Count=count() default=0 on Date step 1d\n",
+              "query": "MimecastTTPUrl\n| where ScanResult == \"malicious\"\n| extend Date = coalesce(todatetime(Date), now() - 14d)\n| make-series Count=count() default=0 on Date step 1d\n",
               "size": 3,
               "showAnalytics": true,
               "title": "Malicious URL Detections",
@@ -291,7 +289,6 @@
                     "queryType": 0,
                     "resourceType": "microsoft.operationalinsights/workspaces",
                     "visualization": "piechart",
-                    "sortBy": [],
                     "chartSettings": {
                       "group": "Url",
                       "createOtherGroup": 10,
@@ -732,7 +729,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastTTPAttachment \n| where Result != \"safe\"\n| make-series Count=count() default=0 on Date step 1d\n",
+              "query": "MimecastTTPAttachment \n| where Result != \"safe\"\n| extend Date = coalesce(todatetime(Date), now() - 14d)\n| make-series Count=count() default=0 on Date step 1d\n",
               "size": 3,
               "showAnalytics": true,
               "title": "Malicious Attachment Detections",
@@ -1001,7 +998,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "MimecastTTPImpersonation\n| where TaggedMalicious == true\n| make-series Count=count() default=0 on EventTime step 1d\n",
+              "query": "MimecastTTPImpersonation\n| where TaggedMalicious == true\n| extend EventTime = coalesce(todatetime(EventTime), now() - 14d)\n| make-series Count=count() default=0 on EventTime step 1d\n",
               "size": 3,
               "showAnalytics": true,
               "title": "Malicious Impersonation Detections",
@@ -1113,7 +1110,6 @@
                     "queryType": 0,
                     "resourceType": "microsoft.operationalinsights/workspaces",
                     "visualization": "piechart",
-                    "sortBy": [],
                     "tileSettings": {
                       "showBorder": false,
                       "titleContent": {
