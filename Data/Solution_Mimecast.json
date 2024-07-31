@@ -25,6 +25,9 @@
         "Workbooks/Mimecast_SEG_Workbook.json",
         "Workbooks/Mimecast_TTP_Workbook.json"
     ],
+    "Playbooks": [
+        "Playbooks/Mimecast Data Connector Trigger Sync/azuredeploy.json"
+    ],
     "Parsers": [
         "Parsers/MimecastAT/Mimecast_AT_Performane_Detail.yaml",
         "Parsers/MimecastAT/Mimecast_AT_Safe_Score.yaml",
