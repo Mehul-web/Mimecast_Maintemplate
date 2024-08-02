@@ -18,7 +18,7 @@ WORKSPACE_ID = os.environ.get("Workspace_Id", "")
 MIMECAST_CLIENT_ID = os.environ.get("Mimecast_Client_Id")
 MIMECAST_CLIENT_SECRET = os.environ.get("Mimecast_Client_Secret")
 
-BASE_URL = os.environ.get("BaseURL")
+BASE_URL = os.environ.get("BaseURL", "https://api.services.mimecast.com")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "SEG_DLP": "/api/dlp/get-logs",
@@ -34,17 +34,17 @@ SEG_CG_TYPES = (
     "spam,url protect"
 )
 FILE_PREFIX_MC_TYPE = {
-        "av": "email_antivirus",
-        "delivery": "email_delivery",
-        "internal email protect": "email_iep",
-        "impersonation protect": "email_ttp_impersonation",
-        "journal": "email_journal",
-        "process": "email_process",
-        "receipt": "email_receipt",
-        "attachment protect": "email_ttp_ap",
-        "spam": "email_spam",
-        "url protect": "email_ttp_url",
-    }
+    "av": "email_antivirus",
+    "delivery": "email_delivery",
+    "internal email protect": "email_iep",
+    "impersonation protect": "email_ttp_impersonation",
+    "journal": "email_journal",
+    "process": "email_process",
+    "receipt": "email_receipt",
+    "attachment protect": "email_ttp_ap",
+    "spam": "email_spam",
+    "url protect": "email_ttp_url",
+}
 # *Error Messages for Exception
 UNEXPECTED_ERROR_MSG = "Unexpected error : Error-{}"
 UNEXPECTED_ERROR_TASK_MSG = "Unexpected error : Error-{}, task = {}"
