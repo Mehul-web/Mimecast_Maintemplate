@@ -18,7 +18,7 @@ WORKSPACE_ID = os.environ.get("Workspace_Id", "")
 MIMECAST_CLIENT_ID = os.environ.get("Mimecast_client_id")
 MIMECAST_CLIENT_SECRET = os.environ.get("Mimecast_client_secret")
 
-BASE_URL = os.environ.get("BaseUrl")
+BASE_URL = os.environ.get("BaseUrl", "https://api.services.mimecast.com")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "TTP_URL": "/api/ttp/url/get-logs",
@@ -54,7 +54,7 @@ CLIENT_ERROR_MSG = "Client error : Error-{}"
 
 # *checkpoint related constants
 CONN_STRING = os.environ.get("Connection_String")
-FILE_SHARE_NAME = os.environ.get("File_Share_Name", default="mimecast-checkpoints")
+FILE_SHARE_NAME = os.environ.get("File_Share_Name", "mimecast-checkpoints")
 START_DATE = os.environ.get("Start_Date")
 
 # *Extra constants

@@ -40,8 +40,11 @@ class MimecastAwarenessUserData(Utils):
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            request_body = {"data": [{"id": campaign_id}], "meta": {"pagination": {"pageSize": consts.MAX_PAGE_SIZE}}}
-            applogger.debug(
+            request_body = {
+                "data": [{"id": campaign_id}],
+                "meta": {"pagination": {"pageSize": consts.MAX_PAGE_SIZE}},
+            }
+            applogger.info(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
                     __method_name,
@@ -50,12 +53,19 @@ class MimecastAwarenessUserData(Utils):
                 )
             )
             next_page = True
+            total_user_count = 0
             while next_page:
-                if int(time.time()) >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS:
+                if (
+                    int(time.time())
+                    >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS
+                ):
                     raise MimecastTimeoutException()
-                user_data_response = self.make_rest_call(method="POST", url=self.get_user_url, json=request_body)
+                user_data_response = self.make_rest_call(
+                    method="POST", url=self.get_user_url, json=request_body
+                )
                 user_data = user_data_response.get("data", [])
                 if len(user_data) > 0 and len(user_data[0].get("items", [])) > 0:
+                    total_user_count += len(user_data[0]["items"])
                     user_data_items = user_data[0]["items"]
                     applogger.info(
                         self.log_format.format(
@@ -67,11 +77,18 @@ class MimecastAwarenessUserData(Utils):
                             ),
                         )
                     )
-                    post_data(json.dumps(user_data_items), log_type=consts.TABLE_NAME["USER_DATA"])
-                    next_page_token = user_data_response["meta"]["pagination"].get("next", "")
+                    post_data(
+                        json.dumps(user_data_items),
+                        log_type=consts.TABLE_NAME["USER_DATA"],
+                    )
+                    next_page_token = user_data_response["meta"]["pagination"].get(
+                        "next", ""
+                    )
                     if next_page_token:
-                        request_body["meta"]["pagination"]["pageToken"] = next_page_token
-                        applogger.debug(
+                        request_body["meta"]["pagination"][
+                            "pageToken"
+                        ] = next_page_token
+                        applogger.info(
                             self.log_format.format(
                                 consts.LOGS_STARTS_WITH,
                                 __method_name,
@@ -86,12 +103,14 @@ class MimecastAwarenessUserData(Utils):
                                 consts.LOGS_STARTS_WITH,
                                 __method_name,
                                 self.azure_function_name,
-                                "End of user data for campaign id : {}.".format(campaign_id),
+                                "End of user data for campaign id : {}.".format(
+                                    campaign_id
+                                ),
                             )
                         )
                 else:
                     next_page = False
-                    applogger.debug(
+                    applogger.info(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,
                             __method_name,
@@ -99,6 +118,16 @@ class MimecastAwarenessUserData(Utils):
                             "No user data found for campaign : {}.".format(campaign_id),
                         )
                     )
+            applogger.info(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "Toal user count : {} for campaign : {}.".format(
+                        total_user_count, campaign_id
+                    ),
+                )
+            )
         except KeyError as key_error:
             applogger.error(
                 self.log_format.format(
@@ -128,7 +157,9 @@ class MimecastAwarenessUserData(Utils):
         """Get Mimecast Awareness Training phishing campaigns user data and ingest to sentinel."""
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            campaigns_response = self.make_rest_call(method="POST", url=self.get_campaign_url)
+            campaigns_response = self.make_rest_call(
+                method="POST", url=self.get_campaign_url
+            )
             campaigns_data = campaigns_response["data"]
             if len(campaigns_data) > 0:
                 applogger.info(
@@ -136,17 +167,26 @@ class MimecastAwarenessUserData(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Found {} Phishing Campaigns.".format(len(campaigns_data)),
+                        "Awareness Training Phishing User Data : Found {} Phishing Campaigns ids".format(
+                            len(campaigns_data)
+                        ),
                     )
                 )
                 for campaign in campaigns_data:
-                    if int(time.time()) >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS:
+                    if (
+                        int(time.time())
+                        >= self.function_start_time
+                        + consts.FUNCTION_APP_TIMEOUT_SECONDS
+                    ):
                         raise MimecastTimeoutException()
                     self.fetch_user_data_for_campaigns(campaign["id"])
             else:
                 applogger.info(
                     self.log_format.format(
-                        consts.LOGS_STARTS_WITH, __method_name, self.azure_function_name, "No Phishing Campaigns found."
+                        consts.LOGS_STARTS_WITH,
+                        __method_name,
+                        self.azure_function_name,
+                        "No Phishing Campaigns found.",
                     )
                 )
         except KeyError as key_error:

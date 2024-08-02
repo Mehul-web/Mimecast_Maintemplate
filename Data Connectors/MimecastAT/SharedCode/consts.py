@@ -16,7 +16,7 @@ FUNCTION_APP_TIMEOUT_SECONDS = 570
 MIMECAST_CLIENT_ID = os.environ.get("MimecastClientID", "")
 MIMECAST_CLIENT_SECRET = os.environ.get("MimecastClientSecret", "")
 MAX_PAGE_SIZE = 500
-BASE_URL = os.environ.get("BaseURL", "")
+BASE_URL = os.environ.get("BaseURL", "https://api.services.mimecast.com")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "PERFORMANCE_DETAILS": "/api/awareness-training/company/get-performance-details",
@@ -50,7 +50,7 @@ JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}."
 
 # *checkpoint related constants
 CONN_STRING = os.environ.get("AzureWebJobsStorage", "")
-FILE_SHARE_NAME = "awareness-training"
+FILE_SHARE_NAME = os.environ.get("File_Share_Name", "mimecast-checkpoints")
 PERFORMANCE_CHECKPOINT_FILE = "performance_details"
 PERFORMANCE_HASH_FILE = "performance_details_hash"
 WATCHLIST_CHECKPOINT_FILE = "watchlist_details"

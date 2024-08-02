@@ -20,7 +20,7 @@ WORKSPACE_ID = os.environ.get("WorkspaceID", "")
 MIMECAST_CLIENT_ID = os.environ.get("MimecastClientID")
 MIMECAST_CLIENT_SECRET = os.environ.get("MimecastClientSecret")
 
-BASE_URL = os.environ.get("BaseURL")
+BASE_URL = os.environ.get("BaseURL", "https://api.services.mimecast.com")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "TTP_URL": "/api/ttp/url/get-logs",
@@ -30,7 +30,7 @@ ENDPOINTS = {
 
 MAX_PAGE_SIZE = 500
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
-TABLE_NAME = {"TTP_URL": "Ttp_Url", "SEG_DLP": "Seg_Dlp", "Audit": "MimecastAudit"}
+TABLE_NAME = {"TTP_URL": "Ttp_Url", "SEG_DLP": "Seg_Dlp", "Audit": "Audit"}
 TTP_URL_FUNCTION_NAME = "TTP_URL"
 SEG_DLP_FUNCTION_NAME = "SEG_DLP"
 AUDIT_FUNCTION_NAME = "Audit"
@@ -53,7 +53,7 @@ JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}"
 # *checkpoint related constants
 CONN_STRING = os.environ.get("AzureWebJobsStorage")
 FILE_PATH = "Audit"
-FILE_SHARE_NAME = os.environ.get("FileShareName")
+FILE_SHARE_NAME = os.environ.get("FileShareName", "mimecast-checkpoints")
 
 
 # *Extra constants

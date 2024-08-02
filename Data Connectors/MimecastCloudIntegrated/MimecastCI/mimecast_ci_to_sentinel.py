@@ -166,6 +166,17 @@ class MimecastCIToSentinel(Utils):
                     )
                     checkpoint_data.update({"nextPage": next_page})
                     self.post_checkpoint_data(self.checkpoint_obj, checkpoint_data)
+                else:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "An error occurred while fetching data,"
+                            "Please ensure that the Sentinel credentials are correct",
+                        )
+                    )
+                    raise MimecastException()
                 page += 1
         except MimecastTimeoutException:
             raise MimecastTimeoutException()
@@ -212,8 +223,10 @@ class MimecastCIToSentinel(Utils):
                 results = await asyncio.gather(*tasks, return_exceptions=True)
             success_count = 0
             for result in results:
-                if result:
+                if result is True:
                     success_count += 1
+            if success_count == 0 and len(url_list) > 0:
+                return False
             if success_count == len(url_list):
                 applogger.info(
                     self.log_format.format(

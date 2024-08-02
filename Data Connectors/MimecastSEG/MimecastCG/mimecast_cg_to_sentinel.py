@@ -37,7 +37,9 @@ class MimecastCGToSentinel(Utils):
         )
         self.authenticate_mimecast_api()
         self.start = start_time
-        self.checkpoint_obj = StateManager(consts.CONN_STRING, "Checkpoint-SEG-CG", consts.FILE_SHARE_NAME)
+        self.checkpoint_obj = StateManager(
+            consts.CONN_STRING, "Checkpoint-SEG-CG", consts.FILE_SHARE_NAME
+        )
 
     async def get_mimecast_cg_data_in_sentinel(self):
         """Get mimecast cg data and ingest data to sentinel, initialization method."""
@@ -136,7 +138,9 @@ class MimecastCGToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Found {} urls in response in page {}".format(len(url_list), page),
+                        "Found {} urls in response in page {}".format(
+                            len(url_list), page
+                        ),
                     )
                 )
                 result = await self.process_s3_bucket_urls(url_list, page)
@@ -154,11 +158,24 @@ class MimecastCGToSentinel(Utils):
                             consts.LOGS_STARTS_WITH,
                             __method_name,
                             self.azure_function_name,
-                            "Complete processing s3 bucket urls for page {}".format(page),
+                            "Complete processing s3 bucket urls for page {}".format(
+                                page
+                            ),
                         )
                     )
                     checkpoint_data.update({"nextPage": next_page})
                     self.post_checkpoint_data(self.checkpoint_obj, checkpoint_data)
+                else:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "An error occurred while fetching data,"
+                            "Please ensure that the Sentinel credentials are correct",
+                        )
+                    )
+                    raise MimecastException()
                 page += 1
 
         except MimecastTimeoutException:
@@ -191,7 +208,9 @@ class MimecastCGToSentinel(Utils):
             async with aiohttp.ClientSession() as session:
                 tasks = []
                 for index, url in enumerate(url_list):
-                    task = asyncio.create_task(self.fetch_unzip_and_ingest_s3_url_data(index + 1, session, url))
+                    task = asyncio.create_task(
+                        self.fetch_unzip_and_ingest_s3_url_data(index + 1, session, url)
+                    )
                     tasks.append(task)
                 applogger.info(
                     self.log_format.format(
@@ -204,8 +223,10 @@ class MimecastCGToSentinel(Utils):
                 results = await asyncio.gather(*tasks, return_exceptions=True)
             success_count = 0
             for result in results:
-                if result:
+                if result is True:
                     success_count += 1
+            if success_count == 0 and len(url_list) > 0:
+                return False
             if success_count == len(url_list):
                 applogger.info(
                     self.log_format.format(
@@ -221,7 +242,9 @@ class MimecastCGToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "{} tasks failed for page {}".format((len(url_list) - success_count), page),
+                        "{} tasks failed for page {}".format(
+                            (len(url_list) - success_count), page
+                        ),
                     )
                 )
             return True
@@ -233,7 +256,11 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    consts.CLIENT_ERROR_MSG.format("Error creating aiohttp.ClientSession: {} for page {}".format(session_err, page)),
+                    consts.CLIENT_ERROR_MSG.format(
+                        "Error creating aiohttp.ClientSession: {} for page {}".format(
+                            session_err, page
+                        )
+                    ),
                 )
             )
             raise MimecastException()
@@ -243,7 +270,9 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    consts.UNEXPECTED_ERROR_MSG.format("{} for page {}".format(err, page)),
+                    consts.UNEXPECTED_ERROR_MSG.format(
+                        "{} for page {}".format(err, page)
+                    ),
                 )
             )
             raise MimecastException()
@@ -265,13 +294,17 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Read zip, Decompress zip and make json from events for task {}".format(index),
+                    "Read zip, Decompress zip and make json from events for task {}".format(
+                        index
+                    ),
                 )
             )
             gzipped_content = await response.read()
             decompressed_data = gzip.decompress(gzipped_content)
             decompressed_content = decompressed_data.decode("utf-8", errors="replace")
-            json_objects = [json.loads(obj) for obj in decompressed_content.splitlines()]
+            json_objects = [
+                json.loads(obj) for obj in decompressed_content.splitlines()
+            ]
             return json_objects
         except MimecastException:
             raise MimecastException()
@@ -281,7 +314,9 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    consts.CLIENT_ERROR_MSG.format("Error reading response: {}, for task = {}".format(err, index)),
+                    consts.CLIENT_ERROR_MSG.format(
+                        "Error reading response: {}, for task = {}".format(err, index)
+                    ),
                 )
             )
             raise MimecastException()
@@ -301,7 +336,9 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Error decoding decompressed data: {}, for task = {}".format(err, index),
+                    "Error decoding decompressed data: {}, for task = {}".format(
+                        err, index
+                    ),
                 )
             )
             raise MimecastException()
@@ -311,7 +348,9 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    consts.JSON_DECODE_ERROR_MSG.format("Error parsing JSON: {}, for task = {}".format(err, index)),
+                    consts.JSON_DECODE_ERROR_MSG.format(
+                        "Error parsing JSON: {}, for task = {}".format(err, index)
+                    ),
                 )
             )
             raise MimecastException()
@@ -326,7 +365,9 @@ class MimecastCGToSentinel(Utils):
             )
             raise MimecastException()
 
-    async def fetch_unzip_and_ingest_s3_url_data(self, index, session: aiohttp.ClientSession, url):
+    async def fetch_unzip_and_ingest_s3_url_data(
+        self, index, session: aiohttp.ClientSession, url
+    ):
         """Fetch, unzip, and ingest data from a given S3 URL.
 
         Args:
@@ -349,7 +390,9 @@ class MimecastCGToSentinel(Utils):
                                 consts.LOGS_STARTS_WITH,
                                 __method_name,
                                 self.azure_function_name,
-                                "Data len = {}, Ingesting data to sentinel for task = {}".format(len(response_json), index),
+                                "Data len = {}, Ingesting data to sentinel for task = {}".format(
+                                    len(response_json), index
+                                ),
                             )
                         )
                         mapping_dict = consts.FILE_PREFIX_MC_TYPE
@@ -426,7 +469,9 @@ class MimecastCGToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Success, Status code : {} for task = {}".format(response.status, index),
+                        "Success, Status code : {} for task = {}".format(
+                            response.status, index
+                        ),
                     )
                 )
                 return response
@@ -437,7 +482,7 @@ class MimecastCGToSentinel(Utils):
                         __method_name,
                         self.azure_function_name,
                         "Too Many Requests, Status code : {} for task = {}".format(
-                            response.status,  index
+                            response.status, index
                         ),
                     )
                 )
@@ -462,7 +507,9 @@ class MimecastCGToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Client response error: {} - {}, for task = {}".format(err.status, err.message, index),
+                    "Client response error: {} - {}, for task = {}".format(
+                        err.status, err.message, index
+                    ),
                 )
             )
             raise MimecastException()

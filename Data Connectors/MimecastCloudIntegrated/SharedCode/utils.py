@@ -203,7 +203,9 @@ class Utils:
             )
             raise MimecastException()
 
-    def make_rest_call(self, method, url, params=None, data=None, json=None):
+    def make_rest_call(
+        self, method, url, params=None, data=None, json=None, check_retry=True
+    ):
         """Make a rest call.
 
         Args:
@@ -212,13 +214,13 @@ class Utils:
             params (dict, optional): The parameters to pass in the call (default is None).
             data (dict, optional): The body(in x-www-form-urlencoded formate) of the request (default is None).
             json (dict, optional): The body(in row formate) of the request (default is None).
+            check_retry (bool, optional): A flag indicating whether to check for retry (default is True).
 
         Returns:
             dict: The JSON response if the call is successful.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            auth_retry_flag = True
             for i in range(consts.MAX_RETRIES):
                 applogger.info(
                     self.log_format.format(
@@ -274,12 +276,37 @@ class Utils:
                         )
                     )
                     response_json = response.json()
-                    self.handle_failed_response_for_failure(
-                        response_json, auth_retry_flag
-                    )
-                    if auth_retry_flag:
-                        auth_retry_flag = False
+                    fail_json = response_json.get("fail", [])
+                    if fail_json:
+                        error_code = fail_json[0].get("code")
+                        error_message = fail_json[0].get("message")
+                    if check_retry:
+                        applogger.error(
+                            self.log_format.format(
+                                consts.LOGS_STARTS_WITH,
+                                __method_name,
+                                self.azure_function_name,
+                                "Generating new token, Error message = {}, Error code = {}".format(
+                                    error_message, error_code
+                                ),
+                            )
+                        )
+                        check_retry = False
+                        self.authenticate_mimecast_api(check_retry)
                         continue
+                    else:
+                        applogger.error(
+                            self.log_format.format(
+                                consts.LOGS_STARTS_WITH,
+                                __method_name,
+                                self.azure_function_name,
+                                "Max retry reached for generating access token,"
+                                "Error message = {}, Error code = {}".format(
+                                    error_message, error_code
+                                ),
+                            )
+                        )
+                        raise MimecastException()
                 elif response.status_code == 403:
                     applogger.error(
                         self.log_format.format(
@@ -430,14 +457,13 @@ class Utils:
             )
             raise MimecastException()
 
-    def handle_failed_response_for_failure(self, response_json, auth_retry_flag=True):
+    def handle_failed_response_for_failure(self, response_json):
         """Handle the failed response for failure status codes.
 
         If request get authentication error it will regenerate the access token.
 
         Args:
             response_json (dict): The JSON response from the API.
-            auth_retry_flag (bool):  Flag for retry of generating access token.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -445,39 +471,8 @@ class Utils:
             fail_json = response_json.get("fail", [])
             error_json = response_json.get("error")
             if fail_json:
-                error_code = fail_json[0].get("code")
                 error_message = fail_json[0].get("message")
-                # *For regenerating access token
-                if (
-                    error_code in ["invalid_access_token", "InvalidAccessToken"]
-                ) and auth_retry_flag:
-                    applogger.error(
-                        self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "{}, Generating new token".format(error_message),
-                        )
-                    )
-                    self.authenticate_mimecast_api()
-                    return
-                elif (
-                    error_code in ["invalid_access_token", "InvalidAccessToken"]
-                    and not auth_retry_flag
-                ):
-                    applogger.error(
-                        self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "{}, Max retry reached for generating access token".format(
-                                error_message
-                            ),
-                        )
-                    )
-                    raise MimecastException()
             elif error_json:
-                error_code = error_json.get("code")
                 error_message = error_json.get("message")
             applogger.error(
                 self.log_format.format(
@@ -549,8 +544,11 @@ class Utils:
             )
             raise MimecastException()
 
-    def authenticate_mimecast_api(self):
-        """Authenticate mimecast endpoint generate access token and update header."""
+    def authenticate_mimecast_api(self, check_retry=True):
+        """Authenticate mimecast endpoint generate access token and update header.
+        Args:
+            check_retry (bool):  Flag for retry of generating access token.
+        """
         __method_name = inspect.currentframe().f_code.co_name
         try:
             body = {
@@ -569,9 +567,7 @@ class Utils:
             self.headers = {}
             url = "{}{}".format(consts.BASE_URL, consts.ENDPOINTS["OAUTH2"])
             response = self.make_rest_call(
-                method="POST",
-                url=url,
-                data=body,
+                method="POST", url=url, data=body, check_retry=check_retry
             )
             if "access_token" in response:
                 access_token = response.get("access_token")
