@@ -123,7 +123,7 @@ class MimecastAwarenessUserData(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Toal user count : {} for campaign : {}.".format(
+                    "Total user count : {} for campaign : {}.".format(
                         total_user_count, campaign_id
                     ),
                 )

@@ -35,7 +35,7 @@ TTP_URL_FUNCTION_NAME = "TTP_URL"
 SEG_DLP_FUNCTION_NAME = "SEG_DLP"
 AUDIT_FUNCTION_NAME = "Audit"
 START_DATE = os.environ.get("StartDate")
-DAYS_BACK = 15
+DAYS_BACK = 60
 FUNCTION_APP_TIMEOUT_SECONDS = 570
 VALID_PREVIOUS_DAY = 63
 
@@ -48,6 +48,7 @@ KEY_ERROR_MSG = "Key error : Error-{}"
 TYPE_ERROR_MSG = "Type error : Error-{}"
 VALUE_ERROR_MSG = "Value error : Error-{}"
 JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}"
+TIME_OUT_ERROR_MSG = "Timeout error : Error-{}"
 
 
 # *checkpoint related constants
@@ -60,4 +61,9 @@ FILE_SHARE_NAME = os.environ.get("FileShareName", "mimecast-checkpoints")
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 MAX_FILE_SIZE = 20 * 1024 * 1024
 MAX_CHUNK_SIZE = 1024 * 1024
-MAX_RETRIES = 3
+MAX_RETRIES = 5
+SENTINEL_RETRY_COUNT = 3
+MAX_TIMEOUT_SENTINEL = 300
+INGESTION_ERROR_SLEEP_TIME = 30
+EXCEPTION_STATUS_CODE = [400, 403, 409]
+RETRYABLE_STATUS_CODE = [429, 500, 503, 502, 509]

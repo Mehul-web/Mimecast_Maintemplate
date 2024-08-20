@@ -277,6 +277,29 @@ class MimecastCGToSentinel(Utils):
             )
             raise MimecastException()
 
+    def handle_corrupt_data(self, index, obj, corrupt_data=[]):
+        """Handle corrupt data by appending it to the corrupt_data list.
+
+        Args:
+            index (int): The index of the task.
+            obj: The object to be handled.
+            corrupt_data (list): A list to store corrupt data. Defaults to an empty list.
+        """
+        __method_name = inspect.currentframe().f_code.co_name
+        try:
+            corrupt_data.append(str(obj))
+        except TypeError as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    consts.TYPE_ERROR_MSG.format(
+                        "{}, for task = {}".format(err, index)
+                    ),
+                )
+            )
+
     async def decompress_and_make_json(self, index, response):
         """Decompress and convert the content of a response to a list of JSON objects.
 
@@ -302,9 +325,33 @@ class MimecastCGToSentinel(Utils):
             gzipped_content = await response.read()
             decompressed_data = gzip.decompress(gzipped_content)
             decompressed_content = decompressed_data.decode("utf-8", errors="replace")
-            json_objects = [
-                json.loads(obj) for obj in decompressed_content.splitlines()
-            ]
+            json_objects = []
+            corrupt_data = []
+            for obj in decompressed_content.splitlines():
+                try:
+                    obj = obj.strip()
+                    if obj:
+                        json_objects.append(json.loads(obj))
+                except json.JSONDecodeError:
+                    self.handle_corrupt_data(index, obj)
+                    continue
+            if corrupt_data:
+                curent_corrupt_data_obj = StateManager(
+                    consts.CONN_STRING,
+                    "Corrupt-Data-Cloud-Gateway_{}".format(str(int(time.time()))),
+                    consts.FILE_SHARE_NAME,
+                )
+                applogger.info(
+                    self.log_format.format(
+                        consts.LOGS_STARTS_WITH,
+                        __method_name,
+                        self.azure_function_name,
+                        "Posting corrupted data into checkpoint file for task: {}".format(
+                            index
+                        ),
+                    )
+                )
+                self.post_checkpoint_data(curent_corrupt_data_obj, corrupt_data)
             return json_objects
         except MimecastException:
             raise MimecastException()
@@ -320,13 +367,27 @@ class MimecastCGToSentinel(Utils):
                 )
             )
             raise MimecastException()
-        except (OSError, IOError) as err:
+        except gzip.BadGzipFile as err:
             applogger.error(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Error decompressing data: {}, for task = {}".format(err, index),
+                    "gzip file is corrupted or Invalid: {}, for task = {}".format(
+                        err, index
+                    ),
+                )
+            )
+            raise MimecastException()
+        except gzip.LargeArchiveException as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "gzip file is too large to be decompressed: {}, for task = {}".format(
+                        err, index
+                    ),
                 )
             )
             raise MimecastException()
@@ -339,6 +400,16 @@ class MimecastCGToSentinel(Utils):
                     "Error decoding decompressed data: {}, for task = {}".format(
                         err, index
                     ),
+                )
+            )
+            raise MimecastException()
+        except (OSError, IOError) as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "Error decompressing data: {}, for task = {}".format(err, index),
                 )
             )
             raise MimecastException()

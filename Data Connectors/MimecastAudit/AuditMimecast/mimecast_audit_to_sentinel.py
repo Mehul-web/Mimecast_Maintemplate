@@ -92,17 +92,25 @@ class MimeCastAuditToSentinel(Utils):
 
             checkpoint = self.get_checkpoint_data(self.state_manager, load_flag=True)
 
-            utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
-            start_date = checkpoint["end_time"]
-            mimecast_start_date = datetime.datetime.strptime(start_date, consts.TIME_FORMAT)
+            utc_timestamp = (
+                datetime.datetime.utcnow()
+                .replace(tzinfo=datetime.timezone.utc)
+                .isoformat()
+            )
+            start_date = checkpoint.get("end_time")
+            mimecast_start_date = datetime.datetime.strptime(
+                start_date, consts.TIME_FORMAT
+            )
 
             checkpoint["start_time"] = mimecast_start_date.strftime(consts.TIME_FORMAT)
-            end_date = datetime.datetime.fromisoformat(utc_timestamp) 
+            end_date = datetime.datetime.fromisoformat(utc_timestamp)
             mimecast_end_date = end_date.strftime(consts.TIME_FORMAT)
             checkpoint["end_time"] = mimecast_end_date
             checkpoint["next"] = ""
 
-            self.post_checkpoint_data(self.state_manager, data=checkpoint, dump_flag=True)
+            self.post_checkpoint_data(
+                self.state_manager, data=checkpoint, dump_flag=True
+            )
 
             self.set_payload(checkpoint["start_time"], checkpoint["end_time"])
             self.start_date = checkpoint["start_time"]
@@ -152,7 +160,11 @@ class MimeCastAuditToSentinel(Utils):
             if not checkpoint:
                 checkpoint = {}
 
-            utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+            utc_timestamp = (
+                datetime.datetime.utcnow()
+                .replace(tzinfo=datetime.timezone.utc)
+                .isoformat()
+            )
 
             checkpoint_updated = False
             if checkpoint.get("start_time") is None:
@@ -179,11 +191,15 @@ class MimeCastAuditToSentinel(Utils):
                 else:
                     start_date = (
                         datetime.datetime.strptime(consts.START_DATE, "%Y-%m-%d")
-                        .replace(hour=0, minute=0, second=0, tzinfo=datetime.timezone.utc)
+                        .replace(
+                            hour=0, minute=0, second=0, tzinfo=datetime.timezone.utc
+                        )
                         .strftime(consts.TIME_FORMAT)
                     )
                     now = datetime.datetime.utcnow().strftime(consts.TIME_FORMAT)
-                    last_valid_date = self.get_utc_time_in_past(days=consts.VALID_PREVIOUS_DAY)
+                    last_valid_date = self.get_utc_time_in_past(
+                        days=consts.VALID_PREVIOUS_DAY
+                    )
                     if start_date > now:
                         applogger.error(
                             self.log_format.format(
@@ -201,7 +217,9 @@ class MimeCastAuditToSentinel(Utils):
                                 __method_name,
                                 self.azure_function_name,
                                 "Date provided is older than 60 days. "
-                                "Ingestion will start from this date: {}".format(last_valid_date),
+                                "Ingestion will start from this date: {}".format(
+                                    last_valid_date
+                                ),
                             )
                         )
 
@@ -214,12 +232,16 @@ class MimeCastAuditToSentinel(Utils):
                         )
                     )
 
-                mimecast_start_date = datetime.datetime.strptime(start_date, consts.TIME_FORMAT) + datetime.timedelta(
-                    seconds=1
+                mimecast_start_date = datetime.datetime.strptime(
+                    start_date, consts.TIME_FORMAT
+                ) + datetime.timedelta(seconds=1)
+                checkpoint["start_time"] = mimecast_start_date.strftime(
+                    consts.TIME_FORMAT
                 )
-                checkpoint["start_time"] = mimecast_start_date.strftime(consts.TIME_FORMAT)
 
-                end_date = datetime.datetime.fromisoformat(utc_timestamp) - datetime.timedelta(seconds=15)
+                end_date = datetime.datetime.fromisoformat(
+                    utc_timestamp
+                ) - datetime.timedelta(seconds=15)
                 mimecast_end_date = end_date.strftime(consts.TIME_FORMAT)
                 checkpoint["end_time"] = mimecast_end_date
 
@@ -284,7 +306,10 @@ class MimeCastAuditToSentinel(Utils):
             __method_name = inspect.currentframe().f_code.co_name
 
             valid_run = True
-            if int(time.time()) >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS:
+            if (
+                int(time.time())
+                >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS
+            ):
                 valid_run = False
                 applogger.info(
                     self.log_format.format(
@@ -296,9 +321,9 @@ class MimeCastAuditToSentinel(Utils):
                 )
                 raise MimecastTimeoutException()
 
-            difference = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.strptime(
-                self.start_date, consts.TIME_FORMAT
-            )
+            difference = datetime.datetime.now(
+                datetime.timezone.utc
+            ) - datetime.datetime.strptime(self.start_date, consts.TIME_FORMAT)
 
             if difference < datetime.timedelta(minutes=15):
                 applogger.info(
@@ -345,20 +370,22 @@ class MimeCastAuditToSentinel(Utils):
             )
 
             checkpoint = self.checkpoint_field()
-            start_date = checkpoint["start_time"]
-            end_date = checkpoint["end_time"]
+            start_date = checkpoint.get("start_time")
+            end_date = checkpoint.get("end_time")
 
             payload = self.set_payload(start_date, end_date)
 
             if "next" in checkpoint and checkpoint["next"] != "":
-                token = checkpoint["next"]
+                token = checkpoint.get("next")
                 payload = self.set_payload(start_date, end_date, token=token)
                 applogger.info(
                     self.log_format.format(
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Continuing data ingestion from remaining ,from : {}".format(start_date),
+                        "Continuing data ingestion from remaining ,from : {}".format(
+                            start_date
+                        ),
                     )
                 )
 
@@ -375,7 +402,7 @@ class MimeCastAuditToSentinel(Utils):
                     json=payload,
                 )
 
-                data = response["data"]
+                data = response.get("data")
                 if len(data) > 0:
                     data = json.dumps(data)
                     sentinel.post_data(data, consts.TABLE_NAME["Audit"])
@@ -391,7 +418,9 @@ class MimeCastAuditToSentinel(Utils):
                 if "next" in response["meta"]["pagination"]:
                     token = response["meta"]["pagination"]["next"]
                     checkpoint["next"] = token
-                    self.post_checkpoint_data(self.state_manager, checkpoint, dump_flag=True)
+                    self.post_checkpoint_data(
+                        self.state_manager, checkpoint, dump_flag=True
+                    )
                     payload = self.set_payload(start_date, end_date, token=token)
 
                     applogger.info(
@@ -469,7 +498,9 @@ class MimeCastAuditToSentinel(Utils):
 
             payload = {
                 "meta": {"pagination": {"pageSize": consts.MAX_PAGE_SIZE}},
-                "data": [{"startDateTime": start_datetime, "endDateTime": end_datetime}],
+                "data": [
+                    {"startDateTime": start_datetime, "endDateTime": end_datetime}
+                ],
             }
             if token:
                 payload["meta"]["pagination"]["pageToken"] = token
@@ -479,7 +510,9 @@ class MimeCastAuditToSentinel(Utils):
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Payload set with start date : {} and end date : {}".format(start_datetime, end_datetime),
+                    "Payload set with start date : {} and end date : {}".format(
+                        start_datetime, end_datetime
+                    ),
                 )
             )
 

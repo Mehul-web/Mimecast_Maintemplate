@@ -47,6 +47,8 @@ KEY_ERROR_MSG = "Key error : Error-{}."
 TYPE_ERROR_MSG = "Type error : Error-{}."
 VALUE_ERROR_MSG = "Value error : Error-{}."
 JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}."
+TIME_OUT_ERROR_MSG = "Timeout error : Error-{}"
+
 
 # *checkpoint related constants
 CONN_STRING = os.environ.get("AzureWebJobsStorage", "")
@@ -59,4 +61,9 @@ SAFESCORE_CHECKPOINT_FILE = "safescore_details"
 SAFESCORE_HASH_FILE = "safescore_details_hash"
 
 # *Extra constants
-MAX_RETRIES = 3
+MAX_RETRIES = 5
+SENTINEL_RETRY_COUNT = 3
+MAX_TIMEOUT_SENTINEL = 300
+INGESTION_ERROR_SLEEP_TIME = 30
+EXCEPTION_STATUS_CODE = [400, 403, 409]
+RETRYABLE_STATUS_CODE = [429, 500, 503, 502, 509]
