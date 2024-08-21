@@ -35,11 +35,11 @@ class MimecastCIToSentinel(Utils):
                 {"Mimecast_Client_Secret": consts.MIMECAST_CLIENT_SECRET},
             ]
         )
-        self.file_share_name = self.set_fileshare_name()
+        consts.FILE_SHARE_NAME
         self.authenticate_mimecast_api()
         self.start = start_time
         self.checkpoint_obj = StateManager(
-            consts.CONN_STRING, "Checkpoint-Cloud-Integrated", self.file_share_name
+            consts.CONN_STRING, "Checkpoint-Cloud-Integrated", consts.FILE_SHARE_NAME
         )
 
     async def get_mimecast_ci_data_in_sentinel(self):
@@ -166,6 +166,17 @@ class MimecastCIToSentinel(Utils):
                     )
                     checkpoint_data.update({"nextPage": next_page})
                     self.post_checkpoint_data(self.checkpoint_obj, checkpoint_data)
+                else:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "An error occurred while fetching data,"
+                            "Please ensure that the Sentinel credentials are correct",
+                        )
+                    )
+                    raise MimecastException()
                 page += 1
         except MimecastTimeoutException:
             raise MimecastTimeoutException()
@@ -212,8 +223,10 @@ class MimecastCIToSentinel(Utils):
                 results = await asyncio.gather(*tasks, return_exceptions=True)
             success_count = 0
             for result in results:
-                if result:
+                if result is True:
                     success_count += 1
+            if success_count == 0 and len(url_list) > 0:
+                return False
             if success_count == len(url_list):
                 applogger.info(
                     self.log_format.format(
@@ -289,9 +302,33 @@ class MimecastCIToSentinel(Utils):
             gzipped_content = await response.read()
             decompressed_data = gzip.decompress(gzipped_content)
             decompressed_content = decompressed_data.decode("utf-8", errors="replace")
-            json_objects = [
-                json.loads(obj) for obj in decompressed_content.splitlines()
-            ]
+            json_objects = []
+            corrupt_data = []
+            for obj in decompressed_content.splitlines():
+                try:
+                    obj = obj.strip()
+                    if obj:
+                        json_objects.append(json.loads(obj))
+                except json.JSONDecodeError:
+                    self.handle_corrupt_data(index, obj)
+                    continue
+            if corrupt_data:
+                curent_corrupt_data_obj = StateManager(
+                    consts.CONN_STRING,
+                    "Corrupt-Data-Cloud-Integrated_{}".format(str(int(time.time()))),
+                    consts.FILE_SHARE_NAME,
+                )
+                applogger.info(
+                    self.log_format.format(
+                        consts.LOGS_STARTS_WITH,
+                        __method_name,
+                        self.azure_function_name,
+                        "Posting corrupted data into checkpoint file for task: {}".format(
+                            index
+                        ),
+                    )
+                )
+                self.post_checkpoint_data(curent_corrupt_data_obj, corrupt_data)
             return json_objects
         except MimecastException:
             raise MimecastException()
@@ -307,13 +344,27 @@ class MimecastCIToSentinel(Utils):
                 )
             )
             raise MimecastException()
-        except (OSError, IOError) as err:
+        except gzip.BadGzipFile as err:
             applogger.error(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Error decompressing data: {}, for task = {}".format(err, index),
+                    "gzip file is corrupted or Invalid: {}, for task = {}".format(
+                        err, index
+                    ),
+                )
+            )
+            raise MimecastException()
+        except gzip.LargeArchiveException as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "gzip file is too large to be decompressed: {}, for task = {}".format(
+                        err, index
+                    ),
                 )
             )
             raise MimecastException()
@@ -326,6 +377,16 @@ class MimecastCIToSentinel(Utils):
                     "Error decoding decompressed data: {}, for task = {}".format(
                         err, index
                     ),
+                )
+            )
+            raise MimecastException()
+        except (OSError, IOError) as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "Error decompressing data: {}, for task = {}".format(err, index),
                 )
             )
             raise MimecastException()
@@ -351,6 +412,29 @@ class MimecastCIToSentinel(Utils):
                 )
             )
             raise MimecastException()
+
+    def handle_corrupt_data(self, index, obj, corrupt_data=[]):
+        """Handle corrupt data by appending it to the corrupt_data list.
+
+        Args:
+            index (int): The index of the task.
+            obj: The object to be handled.
+            corrupt_data (list): A list to store corrupt data. Defaults to an empty list.
+        """
+        __method_name = inspect.currentframe().f_code.co_name
+        try:
+            corrupt_data.append(str(obj))
+        except TypeError as err:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    consts.TYPE_ERROR_MSG.format(
+                        "{}, for task = {}".format(err, index)
+                    ),
+                )
+            )
 
     async def fetch_unzip_and_ingest_s3_url_data(
         self, index, session: aiohttp.ClientSession, url

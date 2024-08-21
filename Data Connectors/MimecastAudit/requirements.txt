@@ -6,3 +6,4 @@ azure-functions
 azure-storage-file-share==12.10.0
 requests
 azure-identity
+tenacity

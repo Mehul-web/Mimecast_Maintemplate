@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "FunctionName": {
-            "defaultValue": "MimecastTTP",
+            "defaultValue": "MimecastTtp",
             "minLength": 1,
             "maxLength": 11,
             "type": "string"
@@ -22,18 +22,11 @@
                 "description": "Enter Workspace Key of Log Analytics workspace"
             }
         },
-        "BaseURL": {
+        "MimecastBaseURL": {
             "defaultValue": "https://api.services.mimecast.com",
             "type": "string",
             "metadata": {
-                "description": "Enter Base URL of Mimecast (e.g. https://api.services.mimecast.com)"
-            }
-        },
-        "StartDate": {
-            "defaultValue": "",
-            "type": "string",
-            "metadata": {
-                "description": "Enter start date from which you want to fetch the data. Date should be in the format of yyyy-mm-dd"
+                "description": "Enter Base URL of Mimecast API 2.0 (e.g. https://api.services.mimecast.com)"
             }
         },
         "MimecastClientID": {
@@ -50,6 +43,20 @@
                 "description": "Enter Mimecast Client Secret for authentication"
             }
         },
+        "StartDate": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Enter the start date in the 'yyyy-mm-dd' format. If you do not provide a date, data from the last 15 days will be fetched automatically. Ensure that the date is in the past and properly formatted"
+            }
+        },
+        "Schedule": {
+            "type": "string",
+            "metadata": {
+                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 */1 * * *)\n\nDo not keep the value empty, minimum value is 10 minutes"
+            },
+            "defaultValue": "0 0 */1 * * *"
+        },
         "LogLevel": {
             "type": "string",
             "metadata": {
@@ -62,13 +69,6 @@
                 "Warning"
             ],
             "defaultValue": "Info"
-        },
-        "Schedule": {
-            "type": "string",
-            "metadata": {
-                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 */1 * * *)\n\nDo not keep the value empty, minimum value is 10 minutes."
-            },
-            "defaultValue": "0 0 */1 * * *"
         },
         "AppInsightsWorkspaceResourceID": {
             "type": "string",
@@ -206,14 +206,14 @@
                         "Function_App_Name": "[variables('FunctionName')]",
                         "WorkspaceID": "[trim(parameters('WorkspaceID'))]",
                         "WorkspaceKey": "[trim(parameters('WorkspaceKey'))]",
-                        "BaseURL": "[trim(parameters('BaseURL'))]",
+                        "BaseURL": "[trim(parameters('MimecastBaseURL'))]",
                         "StartDate": "[trim(parameters('StartDate'))]",
                         "MimecastClientID": "[trim(parameters('MimecastClientID'))]",
                         "MimecastClientSecret": "[trim(parameters('MimecastClientSecret'))]",
                         "File_Share_Name": "mimecast-checkpoints",
                         "Schedule": "[trim(parameters('Schedule'))]",
                         "LogLevel": "[trim(parameters('LogLevel'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastTTP/Mimecast_TTP.zip",
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-MimecastTTP-functionapp",
                         "Connection_String": "[concat('DefaultEndpointsProtocol=https;AccountName=', toLower(variables('FunctionName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', toLower(variables('FunctionName'))), '2019-06-01').keys[0].value, ';EndpointSuffix=',toLower(variables('StorageSuffix')))]"
                     }
                 }
