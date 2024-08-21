@@ -11,9 +11,7 @@ from ..SharedCode import consts
 
 def main(mytimer: func.TimerRequest) -> None:
     """Run the main logic of the Function App triggered by a timer."""
-    utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
-    )
+    utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
     start = time.time()
     applogger.info(
         "{} : {}, Function started at {}".format(
@@ -34,9 +32,7 @@ def main(mytimer: func.TimerRequest) -> None:
         )
     )
     applogger.info(
-        "{} : {}, Total time taken = {}".format(
-            consts.LOGS_STARTS_WITH, consts.SEG_DLP_FUNCTION_NAME, end - start
-        )
+        "{} : {}, Total time taken = {}".format(consts.LOGS_STARTS_WITH, consts.SEG_DLP_FUNCTION_NAME, end - start)
     )
     if mytimer.past_due:
         logging.info("The timer is past due!")

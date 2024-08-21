@@ -2,22 +2,15 @@
 
 import inspect
 import requests
+import time
 import json
 import hashlib
 from .state_manager import StateManager
 from .mimecast_exception import MimecastException
 from .logger import applogger
 from . import consts
+from random import randrange
 from ..SharedCode.sentinel import post_data
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type,
-    retry_if_result,
-    retry_any,
-)
-from requests.exceptions import ConnectionError, Timeout
 
 
 class Utils:
@@ -105,10 +98,7 @@ class Utils:
         try:
             applogger.info(
                 self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    "Fetching checkpoint data.",
+                    consts.LOGS_STARTS_WITH, __method_name, self.azure_function_name, "Fetching checkpoint data."
                 )
             )
             checkpoint_data = checkpoint_obj.get()
@@ -189,217 +179,137 @@ class Utils:
             )
             raise MimecastException()
 
-    def retry_on_status_code(response):
-        """Checks and retry on list of status code.
-
-        Args:
-            response (): API response is passed
-
-        Returns:
-            Bool: if given status code is in list then true else false
-        """
-        __method_name = inspect.currentframe().f_code.co_name
-        if isinstance(response, dict):
-            return False
-        if response.status_code in consts.RETRYABLE_STATUS_CODE:
-            applogger.info(
-                "{}(method={}) : Retrying due to status code : {}".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    response.status_code,
-                )
-            )
-            return True
-        return False
-
-    @retry(
-        stop=stop_after_attempt(consts.MAX_RETRIES),
-        wait=wait_exponential(multiplier=2, min=1, max=30),
-        retry=retry_any(
-            retry_if_result(retry_on_status_code),
-            retry_if_exception_type(ConnectionError),
-        ),
-        before_sleep=lambda retry_state: applogger.error(
-            "{}(method={})  : Retry number: {} due to {} ".format(
-                consts.LOGS_STARTS_WITH,
-                " Retry Decorator",
-                retry_state.attempt_number,
-                retry_state.outcome.exception(),
-            )
-        ),
-    )
-    def make_rest_call(
-        self, method, url, params=None, data=None, json=None, check_retry=True
-    ):
+    def make_rest_call(self, method, url, params=None, data=None, json=None):
         """Make a rest call.
 
         Args:
             url (str): The URL to make the call to.
             method (str): The HTTP method to use for the call.
             params (dict, optional): The parameters to pass in the call (default is None).
-            data (dict, optional): The body(in x-www-form-urlencoded formate) of the request (default is None).
-            json (dict, optional): The body(in row formate) of the request (default is None).
-            check_retry (bool, optional): A flag indicating whether to check for retry (default is True).
+            data (dict, optional): The body(in x-www-form-urlencoded format) of the request (default is None).
+            json (dict, optional): The body(in row format) of the request (default is None).
 
         Returns:
             dict: The JSON response if the call is successful.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            applogger.info(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    "Rest Call, Method :{}, url: {}".format(method, url),
+            for i in range(consts.MAX_RETRIES):
+                applogger.debug(
+                    self.log_format.format(
+                        consts.LOGS_STARTS_WITH,
+                        __method_name,
+                        self.azure_function_name,
+                        "Rest Call, Method :{}, url: {}.".format(method, url),
+                    )
                 )
-            )
+                response = requests.request(
+                    method,
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    data=data,
+                    json=json,
+                )
 
-            response = requests.request(
-                method,
-                url,
-                headers=self.headers,
-                params=params,
-                data=data,
-                json=json,
-                timeout=consts.MAX_TIMEOUT_SENTINEL,
-            )
-
-            if response.status_code >= 200 and response.status_code <= 299:
-                response_json = response.json()
-                applogger.info(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Success, Status code : {}".format(response.status_code),
+                if response.status_code >= 200 and response.status_code <= 299:
+                    response_json = response.json()
+                    applogger.info(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Success, Status code : {}.".format(response.status_code),
+                        )
                     )
-                )
-                self.handle_failed_response_for_success(response_json)
-                return response_json
-            elif response.status_code == 400:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Bad Request = {}, Status code : {}".format(
-                            response.text, response.status_code
-                        ),
-                    )
-                )
-                self.handle_failed_response_for_failure(response)
-            elif response.status_code == 401:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Unauthorized, Status code : {}".format(response.status_code),
-                    )
-                )
-                response_json = response.json()
-                fail_json = response_json.get("fail", [])
-                if fail_json:
-                    error_code = fail_json[0].get("code")
-                    error_message = fail_json[0].get("message")
-                if check_retry:
+                    self.handle_failed_response_for_success(response_json)
+                    return response_json
+                elif response.status_code == 400:
                     applogger.error(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,
                             __method_name,
                             self.azure_function_name,
-                            "Generating new token, Error message = {}, Error code = {}".format(
-                                error_message, error_code
-                            ),
+                            "Bad Request = {}, Status code : {}.".format(response.text, response.status_code),
                         )
                     )
-                    check_retry = False
-                    self.authenticate_mimecast_api(check_retry)
-                    return self.make_rest_call(
-                        method, url=url, json=json, check_retry=check_retry
+                    raise MimecastException()
+                elif response.status_code == 401:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Unauthorized, Status code : {}.".format(response.status_code),
+                        )
                     )
+                    response_json = response.json()
+                    self.handle_failed_response_for_failure(response_json)
+                    continue
+                elif response.status_code == 403:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Forbidden, Status code : {}.".format(response.status_code),
+                        )
+                    )
+                    response_json = response.json()
+                    self.handle_failed_response_for_failure(response_json)
+                elif response.status_code == 404:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Not Found, URL : {}, Status code : {}.".format(url, response.status_code),
+                        )
+                    )
+                    raise MimecastException()
+                elif response.status_code == 409:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Conflict, Status code : {}.".format(response.status_code),
+                        )
+                    )
+                    response_json = response.json()
+                    self.handle_failed_response_for_failure(response_json)
+                elif response.status_code == 429:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Too Many Requests, Status code : {}, Retrying... {}.".format(response.status_code, i),
+                        )
+                    )
+                    time.sleep(randrange(2, 10))
+                    continue
+                elif response.status_code == 500:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Internal Server Error, Status code : {}.".format(response.status_code),
+                        )
+                    )
+                    response_json = response.json()
+                    self.handle_failed_response_for_failure(response_json)
                 else:
                     applogger.error(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,
                             __method_name,
                             self.azure_function_name,
-                            "Max retry reached for generating access token,"
-                            "Error message = {}, Error code = {}".format(
-                                error_message, error_code
-                            ),
+                            "Unexpected Error = {}, Status code : {}.".format(response.text, response.status_code),
                         )
                     )
                     raise MimecastException()
-            elif response.status_code == 403:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Forbidden, Status code : {}".format(response.status_code),
-                    )
-                )
-                self.handle_failed_response_for_failure(response)
-            elif response.status_code == 404:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Not Found, URL : {}, Status code : {}".format(
-                            url, response.status_code
-                        ),
-                    )
-                )
-                raise MimecastException()
-            elif response.status_code == 409:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Conflict, Status code : {}".format(response.status_code),
-                    )
-                )
-                self.handle_failed_response_for_failure(response)
-            elif response.status_code == 429:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Too Many Requests, Status code : {} ".format(
-                            response.status_code
-                        ),
-                    )
-                )
-                return response
-            elif response.status_code == 500:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Internal Server Error, Status code : {}".format(
-                            response.status_code
-                        ),
-                    )
-                )
-                return self.handle_failed_response_for_failure(response)
-            else:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Unexpected Error = {}, Status code : {}".format(
-                            response.text, response.status_code
-                        ),
-                    )
-                )
-                raise MimecastException()
             applogger.error(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
@@ -411,26 +321,6 @@ class Utils:
             raise MimecastException()
         except MimecastException:
             raise MimecastException()
-        except requests.exceptions.Timeout as error:
-            applogger.error(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    consts.TIME_OUT_ERROR_MSG.format(error),
-                )
-            )
-            raise MimecastException()
-        except json.decoder.JSONDecodeError as error:
-            applogger.error(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    consts.JSON_DECODE_ERROR_MSG.format(error),
-                )
-            )
-            raise MimecastException()
         except requests.ConnectionError as error:
             applogger.error(
                 self.log_format.format(
@@ -440,7 +330,17 @@ class Utils:
                     consts.CONNECTION_ERROR_MSG.format(error),
                 )
             )
-            raise ConnectionError()
+            raise MimecastException()
+        except requests.HTTPError as error:
+            applogger.error(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    consts.HTTP_ERROR_MSG.format(error),
+                )
+            )
+            raise MimecastException()
         except requests.RequestException as error:
             applogger.error(
                 self.log_format.format(
@@ -462,8 +362,8 @@ class Utils:
             )
             raise MimecastException()
 
-    def handle_failed_response_for_failure(self, response):
-        """Handle the failed response for failure status codes.
+    def handle_failed_response_for_failure(self, response_json):
+        """Handle the failed response for failure.
 
         If request get authentication error it will regenerate the access token.
 
@@ -472,13 +372,26 @@ class Utils:
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            response_json = response.json()
             error_message = response_json
             fail_json = response_json.get("fail", [])
             error_json = response_json.get("error")
             if fail_json:
+                error_code = fail_json[0].get("code")
                 error_message = fail_json[0].get("message")
+                # *For regenerating access token
+                if error_code in ["invalid_access_token", "InvalidAccessToken"]:
+                    applogger.error(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "{}, Generating new token.".format(error_message),
+                        )
+                    )
+                    self.authenticate_mimecast_api()
+                    return
             elif error_json:
+                error_code = error_json.get("code")
                 error_message = error_json.get("message")
             applogger.error(
                 self.log_format.format(
@@ -488,10 +401,7 @@ class Utils:
                     error_message,
                 )
             )
-            if response.status_code in consts.EXCEPTION_STATUS_CODE:
-                raise MimecastException()
-
-            return response
+            raise MimecastException()
         except MimecastException:
             raise MimecastException()
         except Exception as error:
@@ -553,11 +463,8 @@ class Utils:
             )
             raise MimecastException()
 
-    def authenticate_mimecast_api(self, check_retry=True):
-        """Authenticate mimecast endpoint generate access token and update header.
-        Args:
-            check_retry (bool):  Flag for retry of generating access token.
-        """
+    def authenticate_mimecast_api(self):
+        """Authenticate mimecast endpoint generate access token and update header."""
         __method_name = inspect.currentframe().f_code.co_name
         try:
             body = {
@@ -576,7 +483,9 @@ class Utils:
             self.headers = {}
             url = "{}{}".format(consts.BASE_URL, consts.ENDPOINTS["OAUTH2"])
             response = self.make_rest_call(
-                method="POST", url=url, data=body, check_retry=check_retry
+                method="POST",
+                url=url,
+                data=body,
             )
             if "access_token" in response:
                 access_token = response.get("access_token")
@@ -600,9 +509,7 @@ class Utils:
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Error occurred while fetching the access token from the response = {}.".format(
-                        response
-                    ),
+                    "Error occurred while fetching the access token from the response = {}.".format(response),
                 )
             )
             raise MimecastException()
@@ -643,9 +550,7 @@ class Utils:
             hashed_data = []
             for record in data_to_hash:
                 json_string = json.dumps(record)
-                res_hash = hashlib.sha256(
-                    json_string.encode("utf-8", errors="replace")
-                ).hexdigest()
+                res_hash = hashlib.sha256(json_string.encode("utf-8")).hexdigest()
                 hashed_data.append(res_hash)
             return hashed_data
         except Exception as err:
@@ -682,14 +587,8 @@ class Utils:
                         "Found hashed data checkpoint.",
                     )
                 )
-                hash_record = {
-                    hashed_data[i]: record for i, record in enumerate(data_to_compare)
-                }
-                unique_data = [
-                    hash_record[hash]
-                    for hash in hashed_data
-                    if hash not in checkpoint_hash_list
-                ]
+                hash_record = {hashed_data[i]: record for i, record in enumerate(data_to_compare)}
+                unique_data = [hash_record[hash] for hash in hashed_data if hash not in checkpoint_hash_list]
                 return unique_data
             applogger.info(
                 self.log_format.format(
@@ -724,9 +623,7 @@ class Utils:
         __method_name = inspect.currentframe().f_code.co_name
         try:
             if self.first_page:
-                data_to_post = self.compare_data_with_checkpoint(
-                    data_to_post, state_manager_obj
-                )
+                data_to_post = self.compare_data_with_checkpoint(data_to_post, state_manager_obj)
                 self.first_page = False
             if len(data_to_post) > 0:
                 applogger.info(
@@ -734,9 +631,7 @@ class Utils:
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Posting data to azure Sentinel log analytics, data count : {}.".format(
-                            len(data_to_post)
-                        ),
+                        "Posting data to azure Sentinel log analytics, data count : {}.".format(len(data_to_post)),
                     )
                 )
                 post_data(json.dumps(data_to_post), log_type=table_name)

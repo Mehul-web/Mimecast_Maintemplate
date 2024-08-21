@@ -9,9 +9,7 @@ from .mimecast_performance_details_to_sentinel import MimecastAwarenessPerforman
 
 def main(mytimer: func.TimerRequest) -> None:
     """Driver method for awareness training performance details."""
-    utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
-    )
+    utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
     function_start_time = time.time()
     performance_details_obj = MimecastAwarenessPerformance(function_start_time)
     performance_details_obj.get_awareness_performance_details_data_in_sentinel()

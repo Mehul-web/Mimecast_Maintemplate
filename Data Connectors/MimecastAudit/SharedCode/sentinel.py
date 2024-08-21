@@ -4,14 +4,11 @@ import base64
 import requests
 import hashlib
 import hmac
-import time
 import inspect
 import datetime
-from .logger import applogger
-from .state_manager import StateManager
-from . import consts
-from .mimecast_exception import MimecastException
-from urllib3.exceptions import NameResolutionError
+from SharedCode.logger import applogger
+from SharedCode.mimecast_exception import MimecastException
+from SharedCode import consts
 
 
 def build_signature(
@@ -91,183 +88,34 @@ def post_data(body, log_type):
         "Log-Type": log_type,
         "x-ms-date": rfc1123date,
     }
-    retry_count = 0
-    while retry_count < consts.SENTINEL_RETRY_COUNT:
-        try:
-
-            is_internal_server_issue = False
-            response = requests.post(
-                uri, data=body, headers=headers, timeout=consts.MAX_TIMEOUT_SENTINEL
-            )
-
-            if response.status_code >= 200 and response.status_code <= 299:
-                applogger.debug(
-                    "{}(method={}) : Status_code: {} Accepted: Data Posted Successfully to azure sentinel.".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        response.status_code,
-                    )
-                )
-                return response.status_code
-            elif response.status_code == 400:
-                applogger.error(
-                    "{}(method={}) : {} : Response code: {} from posting data to log analytics. Error: {}".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        response.status_code,
-                        response.content,
-                    )
-                )
-                curent_corrupt_data_obj = StateManager(
-                    consts.CONN_STRING,
-                    "Audit-Ingest-To-Sentinel-Corrupt_{}".format(str(int(time.time()))),
-                    consts.FILE_SHARE_NAME,
-                )
-                curent_corrupt_data_obj.post(body)
-
-                raise MimecastException()
-            elif response.status_code == 403:
-                applogger.error(
-                    "{}(method={}) : {} : Error occurred for build signature: {} Issue with WorkspaceKey. "
-                    "Kindly verify your WorkspaceKey".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        response.content,
-                    )
-                )
-                raise MimecastException()
-            elif response.status_code == 429:
-                applogger.error(
-                    "{}(method={}) : {} : Error occurred: Response code : {} Too many request: {} . "
-                    "sleeping for {} seconds and retrying..".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        response.status_code,
-                        response.content,
-                        consts.INGESTION_ERROR_SLEEP_TIME,
-                    )
-                )
-                time.sleep(consts.INGESTION_ERROR_SLEEP_TIME)
-                retry_count += 1
-                continue
-            elif response.status_code == 500:
-                applogger.error(
-                    "{}(method={}) : {} : Error occurred:  Response code : {} Internal Server Error: {} . "
-                    "sleeping for {} seconds and retrying..".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        response.status_code,
-                        response.content,
-                        consts.INGESTION_ERROR_SLEEP_TIME,
-                    )
-                )
-                time.sleep(consts.INGESTION_ERROR_SLEEP_TIME)
-                retry_count += 1
-                is_internal_server_issue = True
-                continue
-            elif response.status_code == 503:
-                applogger.error(
-                    "{}(method={}) : {} : Error occurred: Response code : {} Service Unavailable: {} . "
-                    "sleeping for {} seconds and retrying..".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        response.status_code,
-                        response.content,
-                        consts.INGESTION_ERROR_SLEEP_TIME,
-                    )
-                )
-                time.sleep(consts.INGESTION_ERROR_SLEEP_TIME)
-                retry_count += 1
-                is_internal_server_issue = True
-                continue
-            applogger.error(
-                "{}(method={}) : {} : Response code: {} from posting data to log analytics. Error: {}".format(
+    try:
+        response = requests.post(uri, data=body, headers=headers)
+        if response.status_code >= 200 and response.status_code <= 299:
+            applogger.debug(
+                "{}(method={}) : Status_code: {} Accepted: Data Posted Successfully to azure sentinel.".format(
                     consts.LOGS_STARTS_WITH,
                     __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
                     response.status_code,
-                    response.content,
                 )
             )
+            return response.status_code
+        else:
             raise MimecastException()
-        except requests.exceptions.ConnectionError as error:
-            if isinstance(error.args[0].reason, NameResolutionError):
-                applogger.error(
-                    "{}(method={}) : {} : Workspace ID is wrong: {}, Sleeping for {} seconds and retrying..".format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        consts.AUDIT_FUNCTION_NAME,
-                        error,
-                        consts.INGESTION_ERROR_SLEEP_TIME,
-                    )
-                )
-                time.sleep(consts.INGESTION_ERROR_SLEEP_TIME)
-                retry_count += 1
-                continue
-            applogger.error(
-                "{}(method={}) : {} : Unknown Connection Error, sleeping - {} seconds and retrying.. Error - {}".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
-                    consts.INGESTION_ERROR_SLEEP_TIME,
-                    error,
-                )
-            )
-            time.sleep(consts.INGESTION_ERROR_SLEEP_TIME)
-            retry_count += 1
-        except requests.exceptions.Timeout as error:
-            applogger.error(
-                "{}(method={}) : {} : Timeout Error: {}".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
-                    error,
-                )
-            )
-            raise MimecastException()
-        except MimecastException as mimecast_err:
-            applogger.error(
-                "{}(method={}) : {} : Mimecast Error: {}".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
-                    mimecast_err,
-                )
-            )
-            raise MimecastException()
-        except Exception as error:
-            applogger.error(
-                "{}(method={}) : {} : Unknown Error: {}.".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
-                    error,
-                )
-            )
-            raise MimecastException()
-    else:
-        if is_internal_server_issue:
-            applogger.error(
-                "{}(method={}) : {} : Maximum Retry count of {} exceeded as internal server error,"
-                " hence stopping execution.".format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    consts.AUDIT_FUNCTION_NAME,
-                    consts.SENTINEL_RETRY_COUNT,
-                )
-            )
-            raise MimecastException()
+    except requests.RequestException as error:
         applogger.error(
-            "{}(method={}) : {} : Maximum Retry count of {} exceeded, hence stopping execution.".format(
+            "{}(method={}) : Request error : Error-{}".format(
                 consts.LOGS_STARTS_WITH,
                 __method_name,
-                consts.AUDIT_FUNCTION_NAME,
-                consts.SENTINEL_RETRY_COUNT,
+                error,
+            )
+        )
+        raise MimecastException()
+    except Exception as error:
+        applogger.error(
+            "{}(method={}) : Error-{}".format(
+                consts.LOGS_STARTS_WITH,
+                __method_name,
+                error,
             )
         )
         raise MimecastException()

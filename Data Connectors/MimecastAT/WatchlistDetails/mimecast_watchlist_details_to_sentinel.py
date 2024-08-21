@@ -37,9 +37,7 @@ class MimecastAwarenessWatchlist(Utils):
         self.hash_file_state_manager_obj = StateManager(
             consts.CONN_STRING, consts.WATCHLIST_HASH_FILE, consts.FILE_SHARE_NAME
         )
-        self.watchlist_details_url = (
-            consts.BASE_URL + consts.ENDPOINTS["WATCHLIST_DETAILS"]
-        )
+        self.watchlist_details_url = consts.BASE_URL + consts.ENDPOINTS["WATCHLIST_DETAILS"]
         self.function_start_time = start_time
 
     def get_request_body(self):
@@ -62,7 +60,7 @@ class MimecastAwarenessWatchlist(Utils):
                     )
                 )
                 request_body["meta"]["pagination"]["pageToken"] = checkpoint
-                applogger.info(
+                applogger.debug(
                     self.log_format.format(
                         consts.LOGS_STARTS_WITH,
                         __method_name,
@@ -73,10 +71,7 @@ class MimecastAwarenessWatchlist(Utils):
             else:
                 applogger.info(
                     self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Page checkpoint not found.",
+                        consts.LOGS_STARTS_WITH, __method_name, self.azure_function_name, "Page checkpoint not found."
                     )
                 )
             return request_body
@@ -100,10 +95,7 @@ class MimecastAwarenessWatchlist(Utils):
             request_body = self.get_request_body()
             next_page = True
             while next_page:
-                if (
-                    int(time.time())
-                    >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS
-                ):
+                if int(time.time()) >= self.function_start_time + consts.FUNCTION_APP_TIMEOUT_SECONDS:
                     raise MimecastTimeoutException()
                 watchlist_details_response = self.make_rest_call(
                     method="POST", url=self.watchlist_details_url, json=request_body
@@ -111,18 +103,12 @@ class MimecastAwarenessWatchlist(Utils):
                 watchlist_details_data = watchlist_details_response["data"]
                 if len(watchlist_details_data) > 0:
                     self.filter_unique_data_and_post(
-                        watchlist_details_data,
-                        self.hash_file_state_manager_obj,
-                        consts.TABLE_NAME["WATCHLIST_DETAILS"],
+                        watchlist_details_data, self.hash_file_state_manager_obj, consts.TABLE_NAME["WATCHLIST_DETAILS"]
                     )
-                    next_page_token = watchlist_details_response["meta"][
-                        "pagination"
-                    ].get("next", "")
+                    next_page_token = watchlist_details_response["meta"]["pagination"].get("next", "")
                     if next_page_token:
-                        request_body["meta"]["pagination"][
-                            "pageToken"
-                        ] = next_page_token
-                        applogger.info(
+                        request_body["meta"]["pagination"]["pageToken"] = next_page_token
+                        applogger.debug(
                             self.log_format.format(
                                 consts.LOGS_STARTS_WITH,
                                 __method_name,
@@ -130,9 +116,7 @@ class MimecastAwarenessWatchlist(Utils):
                                 "Posting page checkpoint : {}.".format(next_page_token),
                             )
                         )
-                        self.post_checkpoint_data(
-                            self.state_manager_obj, next_page_token, False
-                        )
+                        self.post_checkpoint_data(self.state_manager_obj, next_page_token, False)
                     else:
                         next_page = False
                         hash_data_to_save = self.convert_to_hash(watchlist_details_data)
@@ -144,25 +128,17 @@ class MimecastAwarenessWatchlist(Utils):
                                 "Posting hash checkpoint.",
                             )
                         )
-                        self.post_checkpoint_data(
-                            self.hash_file_state_manager_obj, hash_data_to_save, True
-                        )
+                        self.post_checkpoint_data(self.hash_file_state_manager_obj, hash_data_to_save, True)
                         applogger.info(
                             self.log_format.format(
-                                consts.LOGS_STARTS_WITH,
-                                __method_name,
-                                self.azure_function_name,
-                                "End of data.",
+                                consts.LOGS_STARTS_WITH, __method_name, self.azure_function_name, "End of data."
                             )
                         )
                 else:
                     next_page = False
                     applogger.info(
                         self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "No data found.",
+                            consts.LOGS_STARTS_WITH, __method_name, self.azure_function_name, "No data found."
                         )
                     )
         except KeyError as key_error:

@@ -19,7 +19,7 @@ WORKSPACE_ID = os.environ.get("WorkspaceID", "")
 MIMECAST_CLIENT_ID = os.environ.get("MimecastClientID")
 MIMECAST_CLIENT_SECRET = os.environ.get("MimecastClientSecret")
 
-BASE_URL = os.environ.get("BaseURL", "https://api.services.mimecast.com")
+BASE_URL = os.environ.get("BaseURL")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "TTP_URL": "/api/ttp/url/get-logs",
@@ -49,24 +49,18 @@ KEY_ERROR_MSG = "Key error : Error-{}"
 TYPE_ERROR_MSG = "Type error : Error-{}"
 VALUE_ERROR_MSG = "Value error : Error-{}"
 JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}"
-TIME_OUT_ERROR_MSG = "Timeout error : Error-{}"
 
 # *checkpoint related constants
 CONN_STRING = os.environ.get("Connection_String")
-FILE_SHARE_NAME = os.environ.get("File_Share_Name", "mimecast-checkpoints")
+FILE_SHARE_NAME = os.environ.get("File_Share_Name")
 START_DATE = os.environ.get("StartDate")
 
 # *Extra constants
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 MAX_FILE_SIZE = 20 * 1024 * 1024
 MAX_CHUNK_SIZE = 1024 * 1024
-MAX_RETRIES = 5
+MAX_RETRIES = 3
 PAGE_SIZE = 500
 FUNCTION_APP_TIMEOUT_SECONDS = 570
 TIME_DIFFERENCE = 900
-DEFAULT_LOOKUP_DAY = 60
-SENTINEL_RETRY_COUNT = 3
-MAX_TIMEOUT_SENTINEL = 300
-INGESTION_ERROR_SLEEP_TIME = 30
-EXCEPTION_STATUS_CODE = [400, 403, 409]
-RETRYABLE_STATUS_CODE = [429, 500, 503, 502, 509]
+DEFAULT_LOOKUP_DAY = 15

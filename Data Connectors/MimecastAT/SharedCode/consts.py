@@ -16,7 +16,7 @@ FUNCTION_APP_TIMEOUT_SECONDS = 570
 MIMECAST_CLIENT_ID = os.environ.get("MimecastClientID", "")
 MIMECAST_CLIENT_SECRET = os.environ.get("MimecastClientSecret", "")
 MAX_PAGE_SIZE = 500
-BASE_URL = os.environ.get("BaseURL", "https://api.services.mimecast.com")
+BASE_URL = os.environ.get("BaseURL", "")
 ENDPOINTS = {
     "OAUTH2": "/oauth/token",
     "PERFORMANCE_DETAILS": "/api/awareness-training/company/get-performance-details",
@@ -47,12 +47,10 @@ KEY_ERROR_MSG = "Key error : Error-{}."
 TYPE_ERROR_MSG = "Type error : Error-{}."
 VALUE_ERROR_MSG = "Value error : Error-{}."
 JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}."
-TIME_OUT_ERROR_MSG = "Timeout error : Error-{}"
-
 
 # *checkpoint related constants
 CONN_STRING = os.environ.get("AzureWebJobsStorage", "")
-FILE_SHARE_NAME = os.environ.get("File_Share_Name", "mimecast-checkpoints")
+FILE_SHARE_NAME = "awareness-training"
 PERFORMANCE_CHECKPOINT_FILE = "performance_details"
 PERFORMANCE_HASH_FILE = "performance_details_hash"
 WATCHLIST_CHECKPOINT_FILE = "watchlist_details"
@@ -61,9 +59,4 @@ SAFESCORE_CHECKPOINT_FILE = "safescore_details"
 SAFESCORE_HASH_FILE = "safescore_details_hash"
 
 # *Extra constants
-MAX_RETRIES = 5
-SENTINEL_RETRY_COUNT = 3
-MAX_TIMEOUT_SENTINEL = 300
-INGESTION_ERROR_SLEEP_TIME = 30
-EXCEPTION_STATUS_CODE = [400, 403, 409]
-RETRYABLE_STATUS_CODE = [429, 500, 503, 502, 509]
+MAX_RETRIES = 3

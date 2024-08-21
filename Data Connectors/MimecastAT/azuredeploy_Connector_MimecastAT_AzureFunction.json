@@ -22,11 +22,11 @@
                 "description": "Enter Workspace Key of Log Analytics workspace"
             }
         },
-        "MimecastBaseURL": {
+        "BaseURL": {
             "defaultValue": "https://api.services.mimecast.com",
             "type": "string",
             "metadata": {
-                "description": "Enter Base URL of Mimecast API 2.0 (e.g. https://api.services.mimecast.com)"
+                "description": "Enter Base URL of Mimecast API (e.g. https://api.services.mimecast.com)"
             }
         },
         "MimecastClientID": {
@@ -43,14 +43,6 @@
                 "description": "Enter Mimecast Client Secret for authentication"
             }
         },
-        "Schedule": {
-            "type": "string",
-            "minLength": 11,
-            "metadata": {
-                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 0 * * *)\n\nDo not keep the value empty, minimum value is 10 minutes"
-            },
-            "defaultValue": "0 0 */1 * * *"
-        },
         "LogLevel": {
             "type": "string",
             "metadata": {
@@ -63,6 +55,14 @@
                 "Warning"
             ],
             "defaultValue": "Info"
+        },
+        "Schedule": {
+            "type": "string",
+            "minLength": 11,
+            "metadata": {
+                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 0 * * *)"
+            },
+            "defaultValue": "0 0 */1 * * *"
         },
         "AppInsightsWorkspaceResourceID": {
             "type": "string",
@@ -199,13 +199,12 @@
                         "logAnalyticsUri": "[variables('LogAnaltyicsUri')]",
                         "WorkspaceID": "[trim(parameters('WorkspaceID'))]",
                         "WorkspaceKey": "[trim(parameters('WorkspaceKey'))]",
-                        "BaseURL": "[trim(parameters('MimecastBaseURL'))]",
+                        "BaseURL": "[trim(parameters('BaseURL'))]",
                         "MimecastClientID": "[trim(parameters('MimecastClientID'))]",
                         "MimecastClientSecret": "[trim(parameters('MimecastClientSecret'))]",
-                        "File_Share_Name": "mimecast-checkpoints",
                         "Schedule": "[trim(parameters('Schedule'))]",
                         "LogLevel": "[trim(parameters('LogLevel'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-MimecastAT-functionapp"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastAT/MimecastAT.zip"
                     }
                 }
             ]

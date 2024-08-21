@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "FunctionName": {
-            "defaultValue": "MimecastADT",
+            "defaultValue": "Audit",
             "minLength": 1,
             "maxLength": 11,
             "type": "string"
@@ -22,11 +22,18 @@
                 "description": "Enter Workspace Key of Log Analytics workspace"
             }
         },
-        "MimecastBaseURL": {
+        "BaseURL": {
             "defaultValue": "https://api.services.mimecast.com",
             "type": "string",
             "metadata": {
-                "description": "Enter Base URL of Mimecast API 2.0 (e.g. https://api.services.mimecast.com)"
+                "description": "Enter Base URL of Mimecast Audit API (e.g. https://api.services.mimecast.com)"
+            }
+        },
+        "StartDate":{
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Data will be fetched starting from the specified Start Date in the format: yyyy-dd-mm."
             }
         },
         "MimecastClientId": {
@@ -43,21 +50,6 @@
                 "description": "Enter Mimecast Client Secret for authentication"
             }
         },
-        "StartDate": {
-            "defaultValue": "",
-            "type": "string",
-            "metadata": {
-                "description": "Enter the start date in the 'yyyy-mm-dd' format. If you do not provide a date, data from the last 15 days will be fetched automatically. Ensure that the date is in the past and properly formatted"
-            }
-        },
-        "Schedule": {
-            "type": "string",
-            "minLength": 11,
-            "metadata": {
-                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 0 * * *)\n\nDo not keep the value empty, minimum value is 10 minutes"
-            },
-            "defaultValue": "0 0 */1 * * *"
-        },
         "LogLevel": {
             "type": "string",
             "metadata": {
@@ -70,6 +62,14 @@
                 "Warning"
             ],
             "defaultValue": "Info"
+        },
+        "Schedule": {
+            "type": "string",
+            "minLength": 11,
+            "metadata": {
+                "description": "Please enter a valid Quartz cron-expression. (Example: 0 0 0 * * *)"
+            },
+            "defaultValue": "0 0 */1 * * *"
         },
         "AppInsightsWorkspaceResourceID": {
             "type": "string",
@@ -207,14 +207,14 @@
                         "Function_App_Name": "[variables('FunctionName')]",
                         "WorkspaceID": "[trim(parameters('WorkspaceID'))]",
                         "WorkspaceKey": "[trim(parameters('WorkspaceKey'))]",
-                        "BaseURL": "[trim(parameters('MimecastBaseURL'))]",
+                        "BaseURL": "[trim(parameters('BaseURL'))]",
                         "StartDate": "[trim(parameters('StartDate'))]",
                         "MimecastClientID": "[trim(parameters('MimecastClientId'))]",
                         "MimecastClientSecret": "[trim(parameters('MimecastClientSecret'))]",
-                        "File_Share_Name": "mimecast-checkpoints",
+                        "FileShareName": "mimecast-checkpoints",
                         "Schedule": "[trim(parameters('Schedule'))]",
                         "LogLevel": "[trim(parameters('LogLevel'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-MimecastAudit-functionapp"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastAudit/MimecastAudit.zip"    
                     }
                 }
             ]

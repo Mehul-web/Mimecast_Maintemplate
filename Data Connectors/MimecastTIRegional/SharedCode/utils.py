@@ -98,7 +98,7 @@ class Utils:
                     consts.LOGS_STARTS_WITH,
                     __method_name,
                     self.azure_function_name,
-                    "Fetching checkpoint data",
+                    "Fetching checkpoint data"
                 )
             )
             checkpoint_data = checkpoint_obj.get()
@@ -300,7 +300,7 @@ class Utils:
                             self.azure_function_name,
                             "Too Many Requests, Status code : {}, Retrying... {}".format(
                                 response.status_code, i
-                            ),
+                            )
                         )
                     )
                     time.sleep(randrange(2, 10))
@@ -501,7 +501,7 @@ class Utils:
                 )
             )
             self.headers = {}
-            url = ("{}{}".format(consts.BASE_URL, consts.ENDPOINTS["OAUTH2"]),)
+            url = "{}{}".format(consts.BASE_URL, consts.ENDPOINTS["OAUTH2"]),
             response = self.make_rest_call(
                 method="POST",
                 url=url,

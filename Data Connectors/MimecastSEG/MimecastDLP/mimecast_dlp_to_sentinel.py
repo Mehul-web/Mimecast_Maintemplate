@@ -29,9 +29,7 @@ class MimecastDLPToSentinel(Utils):
         )
         self.authenticate_mimecast_api()
         self.start = start_time
-        self.checkpoint_obj = StateManager(
-            consts.CONN_STRING, "Checkpoint-SEG-DLP", consts.FILE_SHARE_NAME
-        )
+        self.checkpoint_obj = StateManager(consts.CONN_STRING, "Checkpoint-SEG-DLP", consts.FILE_SHARE_NAME)
 
     def get_mimecast_dlp_data_in_sentinel(self):
         """Get mimecast data and ingest data to sentinel, initialization method."""
@@ -39,16 +37,11 @@ class MimecastDLPToSentinel(Utils):
         try:
             # Get from date, to date and page token from checkpoint files at start of execution
             from_date, to_date, page_token = self.get_from_date_to_date_page_token()
-            while (
-                self.iso_to_epoch_int(to_date) - self.iso_to_epoch_int(from_date)
-                >= consts.TIME_DIFFERENCE
-            ):
+            while self.iso_to_epoch_int(to_date) - self.iso_to_epoch_int(from_date) >= consts.TIME_DIFFERENCE:
                 if int(time.time()) >= self.start + consts.FUNCTION_APP_TIMEOUT_SECONDS:
                     raise MimecastTimeoutException()
                 # Entry point of starting to get and ingest data to sentinel
-                from_date, to_date, page_token = self.get_and_ingest_data_to_sentinel(
-                    from_date, to_date, page_token
-                )
+                from_date, to_date, page_token = self.get_and_ingest_data_to_sentinel(from_date, to_date, page_token)
             applogger.info(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
@@ -101,23 +94,17 @@ class MimecastDLPToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Checkpoint data is not available, Start fetching data from = {}".format(
-                            from_date
-                        ),
+                        "Checkpoint data is not available, Start fetching data from = {}".format(from_date),
                     )
                 )
-                to_date = datetime.datetime.now(datetime.timezone.utc).strftime(
-                    consts.DATE_TIME_FORMAT
-                )
+                to_date = datetime.datetime.now(datetime.timezone.utc).strftime(consts.DATE_TIME_FORMAT)
             else:
                 from_date = checkpoint_data.get("from_date")
                 page_token = checkpoint_data.get("page_token")
                 to_date = checkpoint_data.get("to_date")
 
                 if (not page_token and from_date) or (not to_date):
-                    to_date = datetime.datetime.now(datetime.timezone.utc).strftime(
-                        consts.DATE_TIME_FORMAT
-                    )
+                    to_date = datetime.datetime.now(datetime.timezone.utc).strftime(consts.DATE_TIME_FORMAT)
 
                 if not from_date:
                     applogger.error(
@@ -157,7 +144,7 @@ class MimecastDLPToSentinel(Utils):
         """Retrieve the start date for data fetching.
 
         If no start date is provided, it calculates the start date based on a default lookup day.
-        If the provided start date is invalid, it will fail and raise an exception.
+        If the provided start date is invalid, it falls back to the default lookup day.
 
         Returns:
             str: The start date for data fetching in the format specified by consts.DATE_TIME_FORMAT.
@@ -165,15 +152,14 @@ class MimecastDLPToSentinel(Utils):
         __method_name = inspect.currentframe().f_code.co_name
         try:
             if not consts.START_DATE:
-                start_date = (
-                    datetime.datetime.utcnow()
-                    - datetime.timedelta(days=consts.DEFAULT_LOOKUP_DAY)
-                ).strftime(consts.DATE_TIME_FORMAT)
+                start_date = (datetime.datetime.utcnow() - datetime.timedelta(days=consts.DEFAULT_LOOKUP_DAY)).strftime(
+                    consts.DATE_TIME_FORMAT
+                )
                 return start_date
             try:
-                start_date = datetime.datetime.strptime(
-                    consts.START_DATE, "%Y-%m-%d"
-                ).strftime(consts.DATE_TIME_FORMAT)
+                start_date = datetime.datetime.strptime(consts.START_DATE, "%Y-%m-%d").strftime(
+                    consts.DATE_TIME_FORMAT
+                )
                 applogger.info(
                     self.log_format.format(
                         consts.LOGS_STARTS_WITH,
@@ -183,15 +169,13 @@ class MimecastDLPToSentinel(Utils):
                     )
                 )
                 # * if start date is future date, raise exception
-                if start_date > datetime.datetime.utcnow().strftime(
-                    consts.DATE_TIME_FORMAT
-                ):
+                if start_date > datetime.datetime.utcnow().strftime(consts.DATE_TIME_FORMAT):
                     applogger.error(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,
                             __method_name,
                             self.azure_function_name,
-                            "Start date given by user is future date",
+                            "Start date given by user is future date"
                         )
                     )
                     raise MimecastException()
@@ -202,7 +186,7 @@ class MimecastDLPToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Start date given by user is not valid",
+                        "Start date given by user is not valid"
                     )
                 )
                 raise MimecastException()
@@ -267,9 +251,7 @@ class MimecastDLPToSentinel(Utils):
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "Fetching data for 'From datetime' = {},  'To datetime' = {}".format(
-                            from_date, to_date
-                        ),
+                        "Fetching data for 'From datetime' = {},  'To datetime' = {}".format(from_date, to_date),
                     )
                 )
                 response = self.make_rest_call("POST", url, json=payload)
@@ -314,17 +296,13 @@ class MimecastDLPToSentinel(Utils):
                         )
                     )
                     from_date = to_date
-                    to_date = datetime.datetime.now(datetime.timezone.utc).strftime(
-                        consts.DATE_TIME_FORMAT
-                    )
+                    to_date = datetime.datetime.now(datetime.timezone.utc).strftime(consts.DATE_TIME_FORMAT)
                     checkpoint_data_to_post = {
                         "from_date": from_date,
                         "to_date": to_date,
                         "page_token": page_token,
                     }
-                    self.post_checkpoint_data(
-                        self.checkpoint_obj, checkpoint_data_to_post
-                    )
+                    self.post_checkpoint_data(self.checkpoint_obj, checkpoint_data_to_post)
                     break
                 self.post_checkpoint_data(self.checkpoint_obj, checkpoint_data_to_post)
                 page += 1
