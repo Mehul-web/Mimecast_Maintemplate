@@ -29,11 +29,11 @@
                 "description": "Enter Base URL of Mimecast Audit API (e.g. https://api.services.mimecast.com)"
             }
         },
-        "StartDate":{
+        "StartDate": {
             "defaultValue": "",
             "type": "string",
             "metadata": {
-                "description": "Data will be fetched starting from the specified Start Date in the format: yyyy-dd-mm."
+                "description": "Data will be fetched starting from the specified Start Date in the format: yyyy-mm-dd."
             }
         },
         "MimecastClientId": {
@@ -214,7 +214,7 @@
                         "FileShareName": "mimecast-checkpoints",
                         "Schedule": "[trim(parameters('Schedule'))]",
                         "LogLevel": "[trim(parameters('LogLevel'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastAudit/MimecastAudit.zip"    
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Mehul-web/Mimecast_Maintemplate/raw/main/Data%20Connectors/MimecastAudit/MimecastAudit.zip"
                     }
                 }
             ]
