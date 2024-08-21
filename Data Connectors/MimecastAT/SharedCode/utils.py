@@ -643,7 +643,9 @@ class Utils:
             hashed_data = []
             for record in data_to_hash:
                 json_string = json.dumps(record)
-                res_hash = hashlib.sha256(json_string.encode("utf-8")).hexdigest()
+                res_hash = hashlib.sha256(
+                    json_string.encode("utf-8", errors="replace")
+                ).hexdigest()
                 hashed_data.append(res_hash)
             return hashed_data
         except Exception as err:
